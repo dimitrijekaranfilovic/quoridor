@@ -26,10 +26,30 @@ class Board:
                     else:
                         self.board[i][j] = (Piece())
                 else:
-                    self.board[i][j] = (Wall())
+                    # if i == 15 and j == 8:
+                    #     val = True
+                    # else:
+                    val = False
+                    self.board[i][j] = (Wall(val))
 
     def print_board(self):
+        minus_row = -1
+
         for i in range(17):
+            if i == 0:
+                print("   {0:>5}".format(i), end="")
+            elif i % 2 == 0:
+                print("{0:>5}".format(i), end="")
+        print()
+
+        for i in range(17):
+            if i % 2 == 0:
+                row = i - minus_row
+                print("{0:<2}".format(i), end="   ")
+                minus_row += 1
+            else:
+                print("{0:<2}".format(""), end="   ")
+
             for j in range(17):
                 if i % 2 == 0 and j % 2 == 0:
                     if not self.board[i][j].is_occupied:
@@ -45,7 +65,7 @@ class Board:
                     else:
                         end = "  "
                         if j != 16:
-                            end = "xx"
+                            end = "X"
                         print("====", end=end)
                 if i % 2 == 0 and j % 2 == 1:
                     if not self.board[i][j].is_occupied:
