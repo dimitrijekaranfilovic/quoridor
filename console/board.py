@@ -2,6 +2,7 @@ from console.elements.piece import Piece
 from console.elements.wall import Wall
 import numpy as np
 from console.elements.element import Element
+from console.util.Color import Color
 
 
 class Board:
@@ -55,7 +56,11 @@ class Board:
                     if not self.board[i][j].is_occupied:
                         print("{0:4}".format(""), end="")
                     else:
-                        print(" {0:2} ".format(self.board[i][j].name), end="")
+                        if self.board[i][j].name == "P1":
+                            color = Color.GREEN
+                        else:
+                            color = Color.RED
+                        print(color + " {0:2} ".format(self.board[i][j].name) + Color.RESET, end="")
                 if i % 2 == 1 and j % 2 == 0:
                     if not self.board[i][j].is_occupied:
                         end = " "
