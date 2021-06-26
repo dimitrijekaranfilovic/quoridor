@@ -19,8 +19,6 @@ class GameState:
         self.player_one_walls_num = 10
         self.player_two_wall_num = 10
         self.board = Board(self.player_one_pos, self.player_two_pos)
-        self.is_game_finished = False
-        self.player_one_won = False
 
     @staticmethod
     def check_config(config):
@@ -53,10 +51,13 @@ class GameState:
             move = 2
             wall = 1
 
-        if self.is_not_occupied(i + move, j) and self.is_not_occupied(i + wall, j) \
-                and 0 <= i + move <= 16:
-            return np.array([i + move, j])
-        return np.array([])
+        if 0 <= i + move <= 16 and 0 <= i + wall <= 16:
+            if self.is_not_occupied(i + move, j) and self.is_not_occupied(i + wall, j):
+                return np.array([i + move, j])
+            else:
+                return np.array([])
+        else:
+            return np.array([])
 
     def get_south_pos(self, player_one):
         """
@@ -74,10 +75,14 @@ class GameState:
             i, j = self.player_two_pos
             move_x = -2
             wall_x = -1
-        if 0 <= i + move_x <= 16 and self.is_not_occupied(i + wall_x, j) and \
-                self.is_not_occupied(i + move_x, j):
-            return np.array([i + move_x, j])
-        return np.array([])
+
+        if 0 <= i + move_x <= 16 and 0 <= i + wall_x <= 16:
+            if self.is_not_occupied(i + wall_x, j) and self.is_not_occupied(i + move_x, j):
+                return np.array([i + move_x, j])
+            else:
+                return np.array([])
+        else:
+            return np.array([])
 
     def get_west_pos(self, player_one):
         """
@@ -96,10 +101,13 @@ class GameState:
             move_y = 2
             wall_y = 1
 
-        if 0 <= j + move_y <= 16 and self.is_not_occupied(i, j + move_y) and \
-                self.is_not_occupied(i, j + wall_y):
-            return np.array([i, j + move_y])
-        return np.array([])
+        if 0 <= j + move_y <= 16 and 0 <= j + wall_y <= 16:
+            if self.is_not_occupied(i, j + move_y) and self.is_not_occupied(i, j + wall_y):
+                return np.array([i, j + move_y])
+            else:
+                return np.array([])
+        else:
+            return np.array([])
 
     def get_east_pos(self, player_one):
         """
@@ -118,10 +126,13 @@ class GameState:
             move_y = -2
             wall_y = -1
 
-        if 0 <= j + move_y <= 16 and self.is_not_occupied(i, j + move_y) and \
-                self.is_not_occupied(i, j + wall_y):
-            return np.array([i, j + move_y])
-        return np.array([])
+        if 0 <= j + move_y <= 16 and 0 <= j + wall_y <= 16:
+            if self.is_not_occupied(i, j + move_y) and self.is_not_occupied(i, j + wall_y):
+                return np.array([i, j + move_y])
+            else:
+                return np.array([])
+        else:
+            return np.array([])
 
     def get_jump_pos(self, player_one):
         """
@@ -143,10 +154,14 @@ class GameState:
             wall1 = 1
             wall2 = 3
 
-        if self.is_not_occupied(i + wall1, j) and self.is_occupied(i + move, j) \
-                and self.is_not_occupied(i + wall2, j) and 0 <= i + jump <= 16:
-            return np.array([i + jump, j])
-        return np.array([])
+        if 0 <= i + jump <= 16:
+            if self.is_not_occupied(i + wall1, j) and self.is_occupied(i + move, j) and self.is_not_occupied(i + wall2,
+                                                                                                             j):
+                return np.array([i + jump, j])
+            else:
+                return np.array([])
+        else:
+            return np.array([])
 
     def get_northwest_pos(self, player_one):
         """
@@ -162,6 +177,7 @@ class GameState:
             wall_x = -1
             wall_y = -1
             occupied_x = -2
+            occupied_wall = -3
         else:
             i, j = self.player_two_pos
             move_x = 2
@@ -169,12 +185,16 @@ class GameState:
             wall_x = 1
             wall_y = 1
             occupied_x = 2
+            occupied_wall = 3
 
-        if 0 <= i + move_x <= 16 and 0 <= j + move_y <= 16 \
-                and self.is_not_occupied(i + wall_x, j + wall_y) \
-                and self.is_occupied(i + occupied_x, j):
-            return np.array([i + move_x, j + move_y])
-        return np.array([])
+        if 0 <= i + move_x <= 16 and 0 <= j + move_y <= 16 and \
+                0 <= i + wall_x <= 16 and 0 <= j + wall_y <= 16 and 0 <= i + occupied_x <= 16:
+            if self.is_not_occupied(i + wall_x, j + wall_y) and self.is_occupied(i + occupied_x, j) and self.is_occupied(i + occupied_wall, j):
+                return np.array([i + move_x, j + move_y])
+            else:
+                return np.array([])
+        else:
+            return np.array([])
 
     def get_northeast_pos(self, player_one):
 
@@ -185,6 +205,7 @@ class GameState:
             wall_x = -1
             wall_y = 1
             occupied_x = -2
+            occupied_wall = -3
         else:
             i, j = self.player_two_pos
             move_x = 2
@@ -192,11 +213,15 @@ class GameState:
             wall_x = 1
             wall_y = -1
             occupied_x = 2
-        if 0 <= i + move_x <= 16 and 0 <= j + move_y <= 16 and self.is_not_occupied(i + wall_x,
-                                                                                    j + wall_y) and \
-                self.is_occupied(i + occupied_x, j):
-            return np.array([i + move_x, j + move_y])
-        return np.array([])
+            occupied_wall = 3
+
+        if 0 <= i + move_x <= 16 and 0 <= j + move_y <= 16 and 0 <= i + wall_x <= 16 and 0 <= j + wall_y <= 16 and 0 <= i + occupied_x <= 16:
+            if self.is_not_occupied(i + wall_x, j + wall_y) and self.is_occupied(i + occupied_x, j) and self.is_occupied(i + occupied_wall, j):
+                return np.array([i + move_x, j + move_y])
+            else:
+                return np.array([])
+        else:
+            return np.array([])
 
     def get_available_moves(self, player_one):
         north = self.get_north_pos(player_one)
@@ -242,3 +267,12 @@ class GameState:
         self.board.board[new_i][new_j].is_occupied = True
 
         self.board.board[new_i][new_j].name = name
+
+    def is_end_state(self):
+        return self.player_one_pos[0] == 0 or self.player_two_pos[0] == 16
+
+    def get_winner(self):
+        if self.player_one_pos[0] == 0:
+            return "P1"
+        else:
+            return "P2"

@@ -21,10 +21,6 @@ class Game:
             9: 16
         }
 
-    def print_rules(self):
-        print("\n--Rules in a nutshell--\n")
-        print("You have to reach the ")
-
     def player_one_user(self):
         while True:
             value = input("Enter move[Mx,y or WxV | WxH]: ")
@@ -73,6 +69,19 @@ class Game:
                                   Color.CYAN)
         self.print_colored_output("It took him " + str(round(t2 - t1, 2)) + " seconds.", Color.CYAN)
 
+    def check_end_state(self):
+        if self.game_state.is_end_state():
+            winner = self.game_state.get_winner()
+            if not self.game_state.is_simulation:
+                if winner == "P1":
+                    self.print_colored_output("You won!", Color.GREEN)
+                else:
+                    self.print_colored_output("You lost!", Color.RED)
+            else:
+                self.print_colored_output("The winner is " + winner, Color.CYAN)
+            return True
+        else:
+            return False
 
     def play(self):
         Game.print_colored_output("### QUORIDOR ###\n\n", Color.CYAN)
@@ -80,6 +89,10 @@ class Game:
         while True:
             self.game_state.board.print_board()
             print()
+
+            if self.check_end_state():
+                break
+
             if self.player_one_turn:
                 if not self.game_state.is_simulation:
                     self.player_one_user()
@@ -87,8 +100,7 @@ class Game:
                     self.player_one_simulation()
             else:
                 self.player_two_simulation()
-            if self.game_state.is_game_finished:
-                break
+
             self.player_one_turn = not self.player_one_turn
 
     @staticmethod
