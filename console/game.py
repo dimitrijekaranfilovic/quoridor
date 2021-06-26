@@ -30,8 +30,11 @@ class Game:
             else:
                 if value.startswith("M"):
                     x_string, y_string = value[1:].split(",")
-                    x_int = int(x_string)
-                    y_int = int(y_string)
+                    if x_string not in self.input_mapping.keys() or y_string not in self.input_mapping.keys():
+                        Game.print_colored_output("Illegal move!", Color.RED)
+
+                    x_int = self.game_state.board.input_mappings[x_string]
+                    y_int = self.game_state.board.input_mappings[y_string]
                     available_moves = self.game_state.get_available_moves(self.player_one_turn)
 
                     counter = 0
