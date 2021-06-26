@@ -9,17 +9,17 @@ class Game:
     def __init__(self):
         self.game_state = GameState({"algorithms": ["minmax"]})
         self.player_one_turn = True
-        self.input_mapping = {
-            1: 0,
-            2: 2,
-            3: 4,
-            4: 6,
-            5: 8,
-            6: 10,
-            7: 12,
-            8: 14,
-            9: 16
-        }
+        # self.input_mapping = {
+        #     1: 0,
+        #     2: 2,
+        #     3: 4,
+        #     4: 6,
+        #     5: 8,
+        #     6: 10,
+        #     7: 12,
+        #     8: 14,
+        #     9: 16
+        # }
 
     def player_one_user(self):
         while True:
@@ -28,31 +28,31 @@ class Game:
             if value == "x" or value == "X":
                 exit(0)
             else:
-                if value.startswith("M"):
+                if value.upper().startswith("M"):
                     x_string, y_string = value[1:].split(",")
-                    if x_string not in self.input_mapping.keys() or y_string not in self.input_mapping.keys():
-                        Game.print_colored_output("Illegal move!", Color.RED)
-
-                    x_int = self.game_state.board.input_mappings[x_string]
-                    y_int = self.game_state.board.input_mappings[y_string]
-                    available_moves = self.game_state.get_available_moves(self.player_one_turn)
-
-                    counter = 0
-                    for i in range(len(available_moves)):
-                        if available_moves[i][0] == x_int and available_moves[i][1] == y_int:
-                            break
-                        else:
-                            counter += 1
-
-                    if counter == len(available_moves):
+                    if x_string.upper() not in self.game_state.board.input_mappings.keys() or y_string.upper() not in self.game_state.board.input_mappings.keys():
                         Game.print_colored_output("Illegal move!", Color.RED)
                     else:
-                        # player 1 make a move
-                        self.game_state.move_piece(self.player_one_turn, np.array([x_int, y_int]))
-                        break
+                        x_int = self.game_state.board.input_mappings[x_string.upper()]
+                        y_int = self.game_state.board.input_mappings[y_string.upper()]
+                        available_moves = self.game_state.get_available_moves(self.player_one_turn)
 
-                    counter = 0
-                elif value.startswith("W"):
+                        counter = 0
+                        for i in range(len(available_moves)):
+                            if available_moves[i][0] == x_int and available_moves[i][1] == y_int:
+                                break
+                            else:
+                                counter += 1
+
+                        if counter == len(available_moves):
+                            Game.print_colored_output("Illegal move!", Color.RED)
+                        else:
+                            # player 1 make a move
+                            self.game_state.move_piece(self.player_one_turn, np.array([x_int, y_int]))
+                            break
+
+                        counter = 0
+                elif value.upper().startswith("W"):
                     # place a wall
                     break
                 else:

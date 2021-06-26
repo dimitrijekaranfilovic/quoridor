@@ -41,14 +41,23 @@ class Board:
 
         for i in range(0, len(self.input_letters), 2):
             end_num = i + 1
-            if end_num <= 16:
-                print(" {0:<1}  ".format(self.input_letters[i]), end=self.input_letters[i + 1])
+            if i == 0:
+                print("     {0:<1}  ".format(self.input_letters[i]),
+                      end=Color.YELLOW + self.input_letters[i + 1].lower() + Color.RESET)
+
+            elif end_num <= 16:
+
+                print(" {0:<1}  ".format(self.input_letters[i]),
+                      end=Color.YELLOW + self.input_letters[i + 1].lower() + Color.RESET)
             else:
                 print("  {0:<3}".format(self.input_letters[i]), end=" ")
         print()
 
         for i in range(17):
-
+            if i % 2 == 0:
+                print("{0:>2}  ".format(self.input_letters[i]), end="")
+            else:
+                print(Color.YELLOW + "{0:>2}  ".format(self.input_letters[i].lower()) + Color.RESET, end="")
             for j in range(17):
                 if i % 2 == 0 and j % 2 == 0:
                     if not self.board[i][j].is_occupied:
@@ -72,4 +81,4 @@ class Board:
                         print("|", end="")
                     else:
                         print(Color.YELLOW + "||" + Color.RESET, end="")
-            print(" {0:>2}".format(self.input_letters[i]))
+            print()

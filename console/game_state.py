@@ -249,6 +249,9 @@ class GameState:
             array.append(north_west)
         return np.array(array)
 
+    def get_available_wall_placements(self):
+        pass
+
     def move_piece(self, player_one, new_pos):
         new_i, new_j = new_pos
 
