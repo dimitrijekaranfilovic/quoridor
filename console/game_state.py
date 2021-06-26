@@ -1,6 +1,8 @@
 from console.board import Board
+from console.util.wall_direction import WallDirection
 from exceptions.invalid_config_exception import InvalidConfigException
 import numpy as np
+from console.elements.wall import Wall
 
 
 class GameState:
@@ -34,6 +36,9 @@ class GameState:
 
     def is_not_occupied(self, i, j):
         return not self.board.board[i][j].is_occupied
+
+    def is_wall(self, i, j):
+        return isinstance(self.board.board[i][j], Wall)
 
     def get_north_pos(self, player_one):
         """
@@ -155,8 +160,9 @@ class GameState:
             wall2 = 3
 
         if 0 <= i + jump <= 16:
-            if self.is_not_occupied(i + wall1, j) and self.is_occupied(i + move, j) and self.is_not_occupied(i + wall2,
-                                                                                                             j):
+            if self.is_not_occupied(i + wall1, j) and \
+                    self.is_occupied(i + move, j) and \
+                    self.is_not_occupied(i + wall2, j):
                 return np.array([i + jump, j])
             else:
                 return np.array([])
@@ -187,9 +193,14 @@ class GameState:
             occupied_x = 2
             occupied_wall = 3
 
-        if 0 <= i + move_x <= 16 and 0 <= j + move_y <= 16 and \
-                0 <= i + wall_x <= 16 and 0 <= j + wall_y <= 16 and 0 <= i + occupied_x <= 16:
-            if self.is_not_occupied(i + wall_x, j + wall_y) and self.is_occupied(i + occupied_x, j) and self.is_occupied(i + occupied_wall, j):
+        if 0 <= i + move_x <= 16 and \
+                0 <= j + move_y <= 16 and \
+                0 <= i + wall_x <= 16 and \
+                0 <= j + wall_y <= 16 and \
+                0 <= i + occupied_x <= 16:
+            if self.is_not_occupied(i + wall_x, j + wall_y) and \
+                    self.is_occupied(i + occupied_x, j) and \
+                    self.is_occupied(i + occupied_wall, j):
                 return np.array([i + move_x, j + move_y])
             else:
                 return np.array([])
@@ -215,8 +226,14 @@ class GameState:
             occupied_x = 2
             occupied_wall = 3
 
-        if 0 <= i + move_x <= 16 and 0 <= j + move_y <= 16 and 0 <= i + wall_x <= 16 and 0 <= j + wall_y <= 16 and 0 <= i + occupied_x <= 16:
-            if self.is_not_occupied(i + wall_x, j + wall_y) and self.is_occupied(i + occupied_x, j) and self.is_occupied(i + occupied_wall, j):
+        if 0 <= i + move_x <= 16 and \
+                0 <= j + move_y <= 16 and \
+                0 <= i + wall_x <= 16 and \
+                0 <= j + wall_y <= 16 and \
+                0 <= i + occupied_x <= 16:
+            if self.is_not_occupied(i + wall_x, j + wall_y) and \
+                    self.is_occupied(i + occupied_x, j) and \
+                    self.is_occupied(i + occupied_wall, j):
                 return np.array([i + move_x, j + move_y])
             else:
                 return np.array([])
@@ -249,8 +266,105 @@ class GameState:
             array.append(north_west)
         return np.array(array)
 
+    def check_wall_placement(self, starting_pos, direction):
+        # TODO: add check whether the wall placement closes the last path towards the goal
+        """
+
+        :param starting_pos: position chosen to start a wall from
+        :param direction: direction in which the second part of the wall is to be constructed
+        :return: (bool, [int, int]] => bool to indicate whether the wall is possible and
+        array of the coordinates of the second wall part
+        """
+        second_piece_x_move, second_piece_y_move = 0, 0
+
+        if self.is_occupied(starting_pos[0], starting_pos[1]):
+            return False, np.array([-1, -1])
+
+        if direction == WallDirection.NORTH:
+            if starting_pos[1] % 2 == 0:
+                return False, np.array([-1, -1])
+            else:
+                second_piece_x_move = -2
+                second_piece_y_move = 0
+        elif direction == WallDirection.SOUTH:
+            if starting_pos[1] % 2 == 0:
+                return False, np.array([-1, -1])
+            else:
+                second_piece_x_move = 2
+                second_piece_y_move = 0
+        elif direction == WallDirection.EAST:
+            if starting_pos[1] % 2 == 1:
+                return False, np.array([-1, -1])
+            else:
+                second_piece_x_move = 0
+                second_piece_y_move = 2
+        else:  # WallDirection.WEST
+            if starting_pos[1] % 2 == 1:
+                return False, np.array([-1, -1])
+            else:
+                second_piece_x_move = 0
+                second_piece_y_move = -2
+
+        if not 0 <= starting_pos[0] + second_piece_x_move <= 16:
+            return False, np.array([-1, -1])
+        if not 0 <= starting_pos[1] + second_piece_y_move <= 16:
+            return False, np.array([-1, -1])
+
+        if self.is_occupied(starting_pos[0] + second_piece_x_move, starting_pos[1] + second_piece_y_move):
+            return False, np.array([-1, -1])
+        return True, np.array([starting_pos[0] + second_piece_x_move, starting_pos[1] + second_piece_y_move])
+
     def get_available_wall_placements(self):
-        pass
+        available_wall_placements = np.array([])
+        # first check the horizontal wall placements
+        for i in range(1, len(self.board.rows), 2):
+            for j in range(0, len(self.board.cols), 2):
+                if self.is_occupied(i, j):
+                    continue
+
+                # first check the west placement
+                second_part_y = j - 2
+                if not 0 <= second_part_y <= 16:
+                    continue
+                if self.is_occupied(i, second_part_y):
+                    continue
+                np.append(available_wall_placements, np.array([i, j, i, second_part_y]))
+
+                # check east placement
+                second_part_y = j + 2
+                if not 0 <= second_part_y <= 16:
+                    continue
+                if self.is_occupied(i, second_part_y):
+                    continue
+                np.append(available_wall_placements, np.array([i, j, i, second_part_y]))
+
+        # then check the vertical wall placements
+        for i in range(0, len(self.board.rows), 2):
+            for j in range(1, len(self.board.cols), 2):
+                if self.is_occupied(i, j):
+                    continue
+
+                # first check the north placement
+                second_part_x = i - 2
+                if not 0 <= second_part_x <= 16:
+                    continue
+                if self.is_occupied(second_part_x, j):
+                    continue
+                np.append(available_wall_placements, np.array([i, j, second_part_x, j]))
+
+                # check the south placement
+                second_part_x = i + 2
+                if not 0 <= second_part_x <= 16:
+                    continue
+                if self.is_occupied(second_part_x, j):
+                    continue
+                np.append(available_wall_placements, np.array([i, j, second_part_x, j]))
+
+        return available_wall_placements
+
+    def place_wall(self, positions):
+        self.board.board[positions[0]][positions[1]].is_occupied = True
+        self.board.board[positions[2]][positions[3]].is_occupied = True
 
     def move_piece(self, player_one, new_pos):
         new_i, new_j = new_pos

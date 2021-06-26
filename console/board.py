@@ -2,24 +2,29 @@ from console.elements.piece import Piece
 from console.elements.wall import Wall
 import numpy as np
 from console.elements.element import Element
-from console.util.Color import Color
+from console.util.color import Color
 
 
 class Board:
     def __init__(self, player_one_starting_pos, player_two_starting_pos):
         # self.board = []
+        self.rows = 17
+        self.cols = 17
         self.player_one_starting_pos = player_one_starting_pos
         self.player_two_starting_pos = player_two_starting_pos
         self.board = np.zeros((17, 17), dtype=Element)
         self.input_mappings = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4, "F": 5, "G": 6, "H": 7, "I": 8, "J": 9, "K": 10,
                                "L": 11, "M": 12, "N": 13, "O": 14, "P": 15, "Q": 16}
+        self.input_mappings_reversed = {0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F", 6: "G", 7: "H", 8: "I", 9: "J",
+                                        10: "K",
+                                        11: "L", 12: "M", 13: "N", 14: "O", 15: "P", 16: "Q"}
         self.input_letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q"]
         self.set_up_board()
 
     def set_up_board(self):
         wall_num = 0
-        for i in range(17):
-            for j in range(17):
+        for i in range(self.rows):
+            for j in range(self.cols):
                 # self.board.append([])
                 if i % 2 == 0 and j % 2 == 0:
                     if i == self.player_one_starting_pos[0] and j == self.player_one_starting_pos[1]:
@@ -53,12 +58,12 @@ class Board:
                 print("  {0:<3}".format(self.input_letters[i]), end=" ")
         print()
 
-        for i in range(17):
+        for i in range(self.rows):
             if i % 2 == 0:
                 print("{0:>2}  ".format(self.input_letters[i]), end="")
             else:
                 print(Color.YELLOW + "{0:>2}  ".format(self.input_letters[i].lower()) + Color.RESET, end="")
-            for j in range(17):
+            for j in range(self.cols):
                 if i % 2 == 0 and j % 2 == 0:
                     if not self.board[i][j].is_occupied:
                         if j != 16:

@@ -1,6 +1,6 @@
 from console.game_state import GameState
 from time import sleep, time
-from console.util.Color import Color
+from console.util.color import Color
 import numpy as np
 from random import choice
 
@@ -68,8 +68,10 @@ class Game:
         move = choice(available_moves)
         self.game_state.move_piece(self.player_one_turn, move)
         t2 = time()
-        self.print_colored_output("He moved the piece to (" + str(move[0]) + ", " + str(move[1]) + ")",
-                                  Color.CYAN)
+        self.print_colored_output(
+            "He moved the piece to (" + self.game_state.board.input_mappings_reversed[move[0]] + ", " +
+            self.game_state.board.input_mappings_reversed[move[1]] + ")",
+            Color.CYAN)
         self.print_colored_output("It took him " + str(round(t2 - t1, 2)) + " seconds.", Color.CYAN)
 
     def check_end_state(self):
