@@ -276,42 +276,44 @@ class GameState:
         array of the coordinates of the second wall part
         """
         second_piece_x_move, second_piece_y_move = 0, 0
+        third_piece_x_move, third_piece_y_move = 0, 0
 
         if self.is_occupied(starting_pos[0], starting_pos[1]):
             return False, np.array([-1, -1])
 
         if direction == WallDirection.NORTH:
             if starting_pos[1] % 2 == 0:
-                return False, np.array([-1, -1])
+                return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
             else:
                 second_piece_x_move = -2
                 second_piece_y_move = 0
         elif direction == WallDirection.SOUTH:
             if starting_pos[1] % 2 == 0:
-                return False, np.array([-1, -1])
+                return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
             else:
                 second_piece_x_move = 2
                 second_piece_y_move = 0
         elif direction == WallDirection.EAST:
             if starting_pos[1] % 2 == 1:
-                return False, np.array([-1, -1])
+                return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
             else:
                 second_piece_x_move = 0
                 second_piece_y_move = 2
         else:  # WallDirection.WEST
             if starting_pos[1] % 2 == 1:
-                return False, np.array([-1, -1])
+                return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
             else:
                 second_piece_x_move = 0
                 second_piece_y_move = -2
 
         if not 0 <= starting_pos[0] + second_piece_x_move <= 16:
-            return False, np.array([-1, -1])
+            return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
         if not 0 <= starting_pos[1] + second_piece_y_move <= 16:
-            return False, np.array([-1, -1])
+            return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
 
         if self.is_occupied(starting_pos[0] + second_piece_x_move, starting_pos[1] + second_piece_y_move):
-            return False, np.array([-1, -1])
+            return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
+
         return True, np.array([starting_pos[0] + second_piece_x_move, starting_pos[1] + second_piece_y_move])
 
     def get_available_wall_placements(self):

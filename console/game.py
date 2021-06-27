@@ -24,7 +24,6 @@ class Game:
     def player_one_user(self):
         while True:
             value = input("Enter move[Mx,y or WxV | WxH]: ")
-            print()
             if value == "x" or value == "X":
                 exit(0)
             else:
@@ -92,6 +91,7 @@ class Game:
         Game.print_colored_output("### QUORIDOR ###\n\n", Color.CYAN)
         # print_rules()
         while True:
+            print()
             self.game_state.board.print_board()
             print()
 
