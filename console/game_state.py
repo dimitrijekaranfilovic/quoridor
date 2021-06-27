@@ -3,6 +3,7 @@ from console.util.wall_direction import WallDirection
 from exceptions.invalid_config_exception import InvalidConfigException
 import numpy as np
 from console.elements.wall import Wall
+from copy import copy
 
 
 class GameState:
@@ -21,6 +22,7 @@ class GameState:
         self.player_one_walls_num = 10
         self.player_two_wall_num = 10
         self.board = Board(self.player_one_pos, self.player_two_pos)
+        self.player_one = True
 
     @staticmethod
     def check_config(config):
@@ -40,17 +42,29 @@ class GameState:
     def is_wall(self, i, j):
         return isinstance(self.board.board[i][j], Wall)
 
+    def get_child_states_with_moves(self):
+        available_moves = self.get_available_moves()
+        children = np.array([])
+        for move in available_moves:
+            child = copy(self)
+            child.move_piece(move)
+            np.append(children, child)
+        return children
+
+    def get_child_states_with_wall_placements(self):
+        available_placements = self.get_available_wall_placements()
+
     def is_not_wall(self, i, j):
         return not isinstance(self.board.board[i][j], Wall)
 
-    def get_north_pos(self, player_one):
+    def get_north_pos(self):
         """
         north_pos is the position one tile towards the opposite end of the board
         :param player_one: player one's turn
         :return: array which contains available move
         """
 
-        if player_one:
+        if self.player_one:
             i, j = self.player_one_pos
             move = -2
             wall = -1
@@ -67,7 +81,7 @@ class GameState:
         else:
             return np.array([])
 
-    def get_south_pos(self, player_one):
+    def get_south_pos(self):
         """
         south_pos is the position one tile towards the player's end of the board
 
@@ -75,7 +89,7 @@ class GameState:
         :return: array which contains available move
         """
 
-        if player_one:
+        if self.player_one:
             i, j = self.player_one_pos
             move_x = 2
             wall_x = 1
@@ -92,7 +106,7 @@ class GameState:
         else:
             return np.array([])
 
-    def get_west_pos(self, player_one):
+    def get_west_pos(self):
         """
         west_pos is the position one tile towards the left side of the board from the player's perspective
 
@@ -100,7 +114,7 @@ class GameState:
         :return: array which contains available move
         """
 
-        if player_one:
+        if self.player_one:
             i, j = self.player_one_pos
             move_y = -2
             wall_y = -1
@@ -117,7 +131,7 @@ class GameState:
         else:
             return np.array([])
 
-    def get_east_pos(self, player_one):
+    def get_east_pos(self):
         """
         east_pos is the position one tile towards the right side of the board from the player's perspective
 
@@ -125,7 +139,7 @@ class GameState:
         :return: array which contains available move
         """
 
-        if player_one:
+        if self.player_one:
             i, j = self.player_one_pos
             move_y = 2
             wall_y = 1
@@ -142,14 +156,14 @@ class GameState:
         else:
             return np.array([])
 
-    def get_jump_pos(self, player_one):
+    def get_jump_pos(self):
         """
         jump is available only if the north_pos is occupied by the opponent and behind him isn't a wall
         :param player_one: player one's turn
         :return: array which contains available move
         """
 
-        if player_one:
+        if self.player_one:
             i, j = self.player_one_pos
             jump = -4
             move = -2
@@ -172,14 +186,14 @@ class GameState:
         else:
             return np.array([])
 
-    def get_northwest_pos(self, player_one):
+    def get_northwest_pos(self):
         """
         northwest and northeast positions are only available
         :param player_one: player one's turn
         :return: array which contains available move
         """
 
-        if player_one:
+        if self.player_one:
             i, j = self.player_one_pos
             move_x = -2
             move_y = -2
@@ -210,9 +224,9 @@ class GameState:
         else:
             return np.array([])
 
-    def get_northeast_pos(self, player_one):
+    def get_northeast_pos(self):
 
-        if player_one:
+        if self.player_one:
             i, j = self.player_one_pos
             move_x = -2
             move_y = 2
@@ -243,14 +257,14 @@ class GameState:
         else:
             return np.array([])
 
-    def get_available_moves(self, player_one):
-        north = self.get_north_pos(player_one)
-        south = self.get_south_pos(player_one)
-        east = self.get_east_pos(player_one)
-        west = self.get_west_pos(player_one)
-        jump = self.get_jump_pos(player_one)
-        north_east = self.get_northeast_pos(player_one)
-        north_west = self.get_northwest_pos(player_one)
+    def get_available_moves(self):
+        north = self.get_north_pos()
+        south = self.get_south_pos()
+        east = self.get_east_pos()
+        west = self.get_west_pos()
+        jump = self.get_jump_pos()
+        north_east = self.get_northeast_pos()
+        north_west = self.get_northwest_pos()
 
         array = []
         if north.size != 0:
@@ -279,8 +293,13 @@ class GameState:
         array of the coordinates of the second wall part
         """
 
+        if self.player_one and self.player_one_walls_num == 0:
+            return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
+        elif not self.player_one and self.player_two_wall_num == 0:
+            return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
+
         if self.is_occupied(starting_pos[0], starting_pos[1]):
-            return False, np.array([-1, -1])
+            return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
 
         if direction == WallDirection.NORTH:
             if starting_pos[1] % 2 == 0:
@@ -327,11 +346,18 @@ class GameState:
             return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
         if self.is_occupied(third_piece_x, third_piece_y):
             return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
+
+        # check whether this wall blocks the opponent's last remaining path
         return True, np.array(
             [starting_pos[0], starting_pos[1], second_piece_x, second_piece_y, third_piece_x, third_piece_y])
 
     def get_available_wall_placements(self):
         available_wall_placements = np.array([])
+        if self.player_one and self.player_one_walls_num == 0:
+            return available_wall_placements
+        elif not self.player_one and self.player_two_wall_num == 0:
+            return available_wall_placements
+
         # first check the horizontal wall placements
         for i in range(1, len(self.board.rows), 2):
             for j in range(0, len(self.board.cols), 2):
@@ -353,11 +379,16 @@ class GameState:
 
                 # check east placement
                 second_part_y = j + 2
+                third_part_y = j + 1
                 if not 0 <= second_part_y <= 16:
+                    continue
+                if not 0 <= third_part_y <= 16:
                     continue
                 if self.is_occupied(i, second_part_y):
                     continue
-                np.append(available_wall_placements, np.array([i, j, i, second_part_y]))
+                if self.is_occupied(i, third_part_y):
+                    continue
+                np.append(available_wall_placements, np.array([i, j, i, second_part_y, i, third_part_y]))
 
         # then check the vertical wall placements
         for i in range(0, len(self.board.rows), 2):
@@ -367,19 +398,31 @@ class GameState:
 
                 # first check the north placement
                 second_part_x = i - 2
+                third_part_x = i - 1
                 if not 0 <= second_part_x <= 16:
+                    continue
+                if not 0 <= third_part_x <= 16:
+                    continue
+                if self.is_occupied(third_part_x, j):
                     continue
                 if self.is_occupied(second_part_x, j):
                     continue
-                np.append(available_wall_placements, np.array([i, j, second_part_x, j]))
+                np.append(available_wall_placements, np.array([i, j, second_part_x, j, third_part_x, j]))
 
                 # check the south placement
                 second_part_x = i + 2
+                third_part_x = i + 1
                 if not 0 <= second_part_x <= 16:
+                    continue
+                if not 0 <= third_part_x <= 16:
+                    continue
+                if self.is_occupied(third_part_x, j):
                     continue
                 if self.is_occupied(second_part_x, j):
                     continue
-                np.append(available_wall_placements, np.array([i, j, second_part_x, j]))
+                np.append(available_wall_placements, np.array([i, j, second_part_x, j, third_part_x, j]))
+
+        # iterate through this array to check whether the walls block opponents last remaining path
 
         return available_wall_placements
 
@@ -387,11 +430,15 @@ class GameState:
         self.board.board[positions[0]][positions[1]].is_occupied = True
         self.board.board[positions[2]][positions[3]].is_occupied = True
         self.board.board[positions[4]][positions[5]].is_occupied = True
+        if self.player_one:
+            self.player_one_walls_num -= 1
+        else:
+            self.player_two_wall_num -= 1
 
-    def move_piece(self, player_one, new_pos):
+    def move_piece(self, new_pos):
         new_i, new_j = new_pos
 
-        if player_one:
+        if self.player_one:
             old_i, old_j = self.player_one_pos
             self.player_one_pos = np.array([new_i, new_j])
             name = "P1"

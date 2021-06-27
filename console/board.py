@@ -37,69 +37,24 @@ class Board:
 
                     # if j == 1 and (i == 0 or i == 1 or i == 2):
                     #     val = True
-                    # if i == 1 and j == 0:
+                    # if i == 0 and j == 1:
                     #     val = True
                     # else:
                     #     val = False
                     self.board[i][j] = (Wall())
                     wall_num += 1
 
-    # def print_board(self):
-    #     taken_wall_color = Color.YELLOW
-    #     player_one_color = Color.GREEN
-    #     player_two_color = Color.RED
-    #     free_piece_place_color = Color.WHITE
-    #     wall_column_color = Color.YELLOW
-    #
-    #     for i in range(0, len(self.input_letters), 2):
-    #         end_num = i + 1
-    #         if i == 0:
-    #             print(free_piece_place_color + "    {0:<1}".format(self.input_letters[i]) + Color.RESET,
-    #                   end=wall_column_color + self.input_letters[i + 1].lower() + Color.RESET)
-    #
-    #         elif end_num < 16:
-    #
-    #             print(free_piece_place_color + "{0:<1}".format(self.input_letters[i]) + Color.RESET,
-    #                   end=wall_column_color + self.input_letters[i + 1].lower() + Color.RESET)
-    #         else:
-    #             print(free_piece_place_color + "{0:<3}".format(self.input_letters[i]) + Color.RESET, end=" ")
-    #     print()
-    #
-    #     for i in range(self.rows):
-    #         if i % 2 == 0:
-    #             print(free_piece_place_color + "{0:>2}  ".format(self.input_letters[i]) + Color.RESET, end="")
-    #         else:
-    #             print(wall_column_color + "{0:>2}  ".format(self.input_letters[i].lower()) + Color.RESET, end="")
-    #
-    #         for j in range(self.cols):
-    #             if i % 2 == 0 and j % 2 == 0:
-    #                 if not self.board[i][j].is_occupied:
-    #                     print(free_piece_place_color + u"\u25A0" + Color.RESET, end="")
-    #                 else:
-    #                     if self.board[i][j].name == "P1":
-    #                         print(player_one_color + u"\u25A0" + Color.RESET, end="")
-    #                     else:
-    #                         print(player_two_color + u"\u25A0" + Color.RESET, end="")
-    #             else:
-    #                 if not self.board[i][j].is_occupied:
-    #                     #print(free_wall_color + u"\u25A0" + Color.RESET, end="")
-    #                     print(" ", end="")
-    #                 else:
-    #                     print(taken_wall_color + u"\u25A0" + Color.RESET, end="")
-    #
-    #         print()
-
     def print_board(self):
 
         for i in range(0, len(self.input_letters), 2):
             end_num = i + 1
             if i == 0:
-                print("     {0:<2}  ".format(self.input_letters[i]),
+                print("      {0:<2} ".format(self.input_letters[i]),
                       end=Color.YELLOW + self.input_letters[i + 1].lower() + Color.RESET)
 
             elif end_num <= 16:
 
-                print(" {0:<2}  ".format(self.input_letters[i]),
+                print("  {0:<2} ".format(self.input_letters[i]),
                       end=Color.YELLOW + self.input_letters[i + 1].lower() + Color.RESET)
             else:
                 print("  {0:<3}".format(self.input_letters[i]), end=" ")
@@ -125,14 +80,21 @@ class Board:
                         print(color + " {0:2} ".format(self.board[i][j].name) + Color.RESET, end="")
                 elif i % 2 == 1 and j % 2 == 0:
                     if not self.board[i][j].is_occupied:
-                        print("-----", end="")
+                        line = ""
+                        for k in range(5):
+                            line += "\u23AF"
+                        print(line, end="")
                     else:
-                        print(Color.YELLOW + "=====" + Color.RESET, end="")
+                        # print(Color.YELLOW + "=====" + Color.RESET, end="")
+                        line = ""
+                        for k in range(5):
+                            line += "\u2501"
+                        print(Color.YELLOW + line + Color.RESET, end="")
                 elif i % 2 == 0 and j % 2 == 1:
                     if not self.board[i][j].is_occupied:
                         print(" |", end="")
                     else:
-                        print(Color.YELLOW + "||" + Color.RESET, end="")
+                        print(Color.YELLOW + " \u2503" + Color.RESET, end="")
                 elif i % 2 == 1 and j % 2 == 1:
                     if not self.board[i][j].is_occupied:
                         print("o", end="")
