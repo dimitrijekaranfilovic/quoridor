@@ -3,7 +3,8 @@ from console.util.wall_direction import WallDirection
 from exceptions.invalid_config_exception import InvalidConfigException
 import numpy as np
 from console.elements.wall import Wall
-from copy import copy
+from copy import copy, deepcopy
+from console.search.astar import astar
 
 
 class GameState:
@@ -22,6 +23,7 @@ class GameState:
         self.player_one_walls_num = 10
         self.player_two_wall_num = 10
         self.board = Board(self.player_one_pos, self.player_two_pos)
+        # self.state_backup = []
         self.player_one = True
 
     @staticmethod
@@ -42,17 +44,47 @@ class GameState:
     def is_wall(self, i, j):
         return isinstance(self.board.board[i][j], Wall)
 
+    def is_jump(self, move):
+        if self.player_one:
+            return abs(self.player_one_pos[0] - move[0]) == 4
+        else:
+            return abs(self.player_two_pos[0] - move[0]) == 4
+
+    def is_goal_state(self):
+        if self.player_one:
+            return self.player_one_pos[0] == 0
+        else:
+            return self.player_two_pos[0] == 16
+
     def get_child_states_with_moves(self):
+        # available_moves = self.get_available_moves()
+        # children = np.array([])
+        # for move in available_moves:
+        #     child = copy(self)
+        #     child.move_piece(move)
+        #     np.append(children, child)
+        # return children
         available_moves = self.get_available_moves()
-        children = np.array([])
+        children = []
         for move in available_moves:
             child = copy(self)
+            # child = deepcopy(self)
             child.move_piece(move)
-            np.append(children, child)
+            cost = 1
+            if self.is_jump(move):
+                cost = 0.5
+            children.append((child, (move[0], move[1]), cost))
         return children
 
-    def get_child_states_with_wall_placements(self):
-        available_placements = self.get_available_wall_placements()
+    def backup_state(self):
+        new_board = Board(self.player_one_pos, self.player_two_pos)
+        for i in range(17):
+            for j in range(17):
+                new_board.board[i][j] = self.board.board[i][j]
+        return new_board, self.player_one_walls_num, self.player_two_wall_num, self.player_one
+
+    # def get_child_states_with_wall_placements(self):
+    #     available_placements = self.get_available_wall_placements()
 
     def is_not_wall(self, i, j):
         return not isinstance(self.board.board[i][j], Wall)
@@ -214,7 +246,8 @@ class GameState:
                 0 <= j + move_y <= 16 and \
                 0 <= i + wall_x <= 16 and \
                 0 <= j + wall_y <= 16 and \
-                0 <= i + occupied_x <= 16:
+                0 <= i + occupied_x <= 16 and \
+                0 <= i + occupied_wall <= 16:
             if self.is_not_occupied(i + wall_x, j + wall_y) and \
                     self.is_occupied(i + occupied_x, j) and \
                     self.is_occupied(i + occupied_wall, j):
@@ -247,7 +280,8 @@ class GameState:
                 0 <= j + move_y <= 16 and \
                 0 <= i + wall_x <= 16 and \
                 0 <= j + wall_y <= 16 and \
-                0 <= i + occupied_x <= 16:
+                0 <= i + occupied_x <= 16 and \
+                0 <= i + occupied_wall <= 16:
             if self.is_not_occupied(i + wall_x, j + wall_y) and \
                     self.is_occupied(i + occupied_x, j) and \
                     self.is_occupied(i + occupied_wall, j):
@@ -348,8 +382,25 @@ class GameState:
             return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
 
         # check whether this wall blocks the opponent's last remaining path
-        return True, np.array(
+        positions = np.array(
             [starting_pos[0], starting_pos[1], second_piece_x, second_piece_y, third_piece_x, third_piece_y])
+        copy_state = deepcopy(self)
+        copy_state.place_wall(positions)
+        copy_state.player_one = False
+
+        old_board, old_wall_num_1, old_wall_num_2, player_one = self.backup_state()
+
+        a_star_result = astar(copy_state)
+
+        self.board = old_board
+        self.player_one_walls_num = old_wall_num_1
+        self.player_two_wall_num = old_wall_num_2
+        self.player_one = player_one
+
+        if len(a_star_result) == 0:
+            return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
+
+        return True, positions
 
     def get_available_wall_placements(self):
         available_wall_placements = np.array([])
