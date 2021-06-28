@@ -23,7 +23,6 @@ class GameState:
         self.player_one_walls_num = 10
         self.player_two_wall_num = 10
         self.board = Board(self.player_one_pos, self.player_two_pos)
-        # self.state_backup = []
         self.player_one = True
 
     @staticmethod
@@ -332,6 +331,9 @@ class GameState:
         elif not self.player_one and self.player_two_wall_num == 0:
             return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
 
+        if starting_pos[0] % 2 == 1 and starting_pos[1] == 1:
+            return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
+
         if self.is_occupied(starting_pos[0], starting_pos[1]):
             return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
 
@@ -390,14 +392,14 @@ class GameState:
 
         old_board, old_wall_num_1, old_wall_num_2, player_one = self.backup_state()
 
-        a_star_result = astar(copy_state)
+        a_star_result = astar(copy_state, True)
 
         self.board = old_board
         self.player_one_walls_num = old_wall_num_1
         self.player_two_wall_num = old_wall_num_2
         self.player_one = player_one
 
-        if len(a_star_result) == 0:
+        if not a_star_result:
             return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
 
         return True, positions
