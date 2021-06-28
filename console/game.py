@@ -1,5 +1,5 @@
-from console.game_state import GameState
-from time import sleep, time
+from console.states.game_state import GameState
+from time import time
 from console.util.wall_direction import WallDirection
 from console.util.color import Color
 import numpy as np

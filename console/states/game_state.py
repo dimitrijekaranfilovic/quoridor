@@ -56,13 +56,6 @@ class GameState:
             return self.player_two_pos[0] == 16
 
     def get_child_states_with_moves(self):
-        # available_moves = self.get_available_moves()
-        # children = np.array([])
-        # for move in available_moves:
-        #     child = copy(self)
-        #     child.move_piece(move)
-        #     np.append(children, child)
-        # return children
         available_moves = self.get_available_moves()
         children = []
         for move in available_moves:
@@ -72,7 +65,12 @@ class GameState:
             cost = 1
             if self.is_jump(move):
                 cost = 0.5
-            children.append((child, (move[0], move[1]), cost))
+            if child.player_one:
+                pos = child.player_one_pos
+            else:
+                pos = child.player_two_pos
+            simplified_child_state = ((pos[0], pos[1]), (pos[0] - move[0], pos[1] - move[1]), cost)
+            children.append((child, simplified_child_state))
         return children
 
     def backup_state(self):
