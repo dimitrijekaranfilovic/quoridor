@@ -7,6 +7,14 @@ from copy import copy, deepcopy
 from console.search.astar import astar
 
 
+class BoardPieceStatus:
+    OCCUPIED_BY_PLAYER_1 = 1
+    OCCUPIED_BY_PLAYER_2 = 2
+    FREE_PLAYER = 3
+    FREE_WALL = 4
+    OCCUPIED_WALL = 5
+
+
 class GameState:
     def __init__(self, config):
         """
@@ -24,7 +32,26 @@ class GameState:
         self.player_two_wall_num = 10
         self.board = Board(self.player_one_pos, self.player_two_pos)
         self.player_one = True
-        self.value = 0
+        # self.value = 0
+        # self.board = np.zeros((17, 17), dtype=int)
+        # self.set_up_board()
+        self.rows = 17
+        self.cols = 17
+        # self.input_mappings = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4, "F": 5, "G": 6, "H": 7, "I": 8, "J": 9, "K": 10,
+        #                        "L": 11, "M": 12, "N": 13, "O": 14, "P": 15, "Q": 16}
+        # self.input_mappings_reversed = {0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F", 6: "G", 7: "H", 8: "I", 9: "J",
+        #                                 10: "K",
+        #                                 11: "L", 12: "M", 13: "N", 14: "O", 15: "P", 16: "Q"}
+        # self.input_letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q"]
+
+    # def set_up_board(self):
+    #     for i in range(self.rows):
+    #         for j in range(self.cols):
+    #             if i % 2 == 0 and j % 2 == 0:
+    #
+    #
+    #     self.board[self.player_one_pos[0]][self.player_one_pos[1]] = BoardPieceStatus.OCCUPIED_BY_PLAYER_1
+    #     self.board[self.player_two_pos[0]][self.player_two_pos[1]] = BoardPieceStatus.OCCUPIED_BY_PLAYER_2
 
     @staticmethod
     def check_config(config):
@@ -80,15 +107,16 @@ class GameState:
         return children
 
     def get_all_child_states(self):
-        children = set()
+        children = []
         available_moves = self.get_available_moves()
         for move in available_moves:
             child = deepcopy(self)
+            # child = copy(self)
             child.move_piece(move)
-            children.add((child, (move[0], move[1])))
+            children.append((child, (move[0], move[1])))
         # TODO: bug when calling the get_available_wall_placements function
         for child in self.get_available_wall_placements(True):
-            children.add(child)
+            children.append(child)
         return children
 
     def get_north_pos(self):
@@ -403,172 +431,52 @@ class GameState:
         return not astar(self, True)
 
     def get_available_wall_placements(self, include_state=False):
-        available_wall_placements = []
+        wall_placements = []
         if self.player_one and self.player_one_walls_num == 0:
-            return available_wall_placements
+            return wall_placements
         elif not self.player_one and self.player_two_wall_num == 0:
-            return available_wall_placements
+            return wall_placements
 
-        # first check the horizontal wall placements
-        for i in range(1, self.board.rows, 2):
-            for j in range(0, self.board.cols, 2):
-                if self.is_occupied(i, j):
-                    continue
-
-                # first check the west placement
-                second_part_y = j - 2
-                third_part_y = j - 1
-                if not 0 <= second_part_y <= 16:
-                    continue
-                if not 0 <= third_part_y <= 16:
-                    continue
-                if self.is_occupied(i, second_part_y):
-                    continue
-                if self.is_occupied(i, third_part_y):
-                    continue
-
-                positions = np.array([i, j, i, second_part_y, i, third_part_y])
-                copy_state = deepcopy(self)
-                if not copy_state.is_wall_blocking(positions, not self.player_one):
-                    if include_state:
-                        available_wall_placements.append((copy_state, (
-                            positions[0],
-                            positions[1],
-                            positions[2],
-                            positions[3],
-                            positions[4],
-                            positions[5]
-                        )))
-                    else:
-                        # print("Dodajem west zid koji pocinje u ", positions[0], positions[1])
-                        available_wall_placements.append((
-                            positions[0],
-                            positions[1],
-                            positions[2],
-                            positions[3],
-                            positions[4],
-                            positions[5]
-                        ))
-
-                # check east placement
-                second_part_y = j + 2
-                third_part_y = j + 1
-                if not 0 <= second_part_y <= 16:
-                    continue
-                if not 0 <= third_part_y <= 16:
-                    continue
-                if self.is_occupied(i, second_part_y):
-                    continue
-                if self.is_occupied(i, third_part_y):
-                    continue
-
-                positions = np.array([i, j, i, second_part_y, i, third_part_y])
-                copy_state = deepcopy(self)
-                if not copy_state.is_wall_blocking(positions, not self.player_one):
-                    if include_state:
-                        # if not copy_state.is_wall_blocking(positions, not self.player_one):
-
-                        available_wall_placements.append((copy_state, (
-                            positions[0],
-                            positions[1],
-                            positions[2],
-                            positions[3],
-                            positions[4],
-                            positions[5]
-                        )))
-                    else:
-                        # print("Dodajem east zid koji pocinje u ", positions[0], positions[1])
-                        available_wall_placements.append((
-                            positions[0],
-                            positions[1],
-                            positions[2],
-                            positions[3],
-                            positions[4],
-                            positions[5]
-                        ))
-
-        # then check the vertical wall placements
-        for i in range(0, self.board.rows, 2):
+        # vertical walls
+        for i in range(0, self.board.rows - 1, 2):
             for j in range(1, self.board.cols, 2):
                 if self.is_occupied(i, j):
                     continue
-
-                # first check the north placement
-                second_part_x = i - 2
-                third_part_x = i - 1
-                if not 0 <= second_part_x <= 16:
-                    continue
-                if not 0 <= third_part_x <= 16:
-                    continue
-                if self.is_occupied(third_part_x, j):
-                    continue
-                if self.is_occupied(second_part_x, j):
-                    continue
-
-                positions = np.array([i, j, second_part_x, j, third_part_x, j])
-                copy_state = deepcopy(self)
-                if not copy_state.is_wall_blocking(positions, not self.player_one):
-                    if include_state:
-                        # if not copy_state.is_wall_blocking(positions, not self.player_one):
-                        available_wall_placements.append((copy_state, (
-                            positions[0],
-                            positions[1],
-                            positions[2],
-                            positions[3],
-                            positions[4],
-                            positions[5]
-                        )))
-                    else:
-                        # print("Dodajem north zid koji pocinje u ", positions[0], positions[1])
-
-                        available_wall_placements.append((
-                            positions[0],
-                            positions[1],
-                            positions[2],
-                            positions[3],
-                            positions[4],
-                            positions[5]
-                        ))
-
-                # check the south placement
                 second_part_x = i + 2
                 third_part_x = i + 1
-                if not 0 <= second_part_x <= 16:
-                    continue
-                if not 0 <= third_part_x <= 16:
+                if self.is_occupied(second_part_x, j):
                     continue
                 if self.is_occupied(third_part_x, j):
                     continue
-                if self.is_occupied(second_part_x, j):
-                    continue
-
-                positions = np.array([i, j, second_part_x, j, third_part_x, j])
+                positions = (i, j, second_part_x, j, third_part_x, j)
                 copy_state = deepcopy(self)
-                if not copy_state.is_wall_blocking(positions, not self.player_one):
-                    if include_state:
-                        # if not copy_state.is_wall_blocking(positions, not self.player_one):
-                        available_wall_placements.append((copy_state, (
-                            positions[0],
-                            positions[1],
-                            positions[2],
-                            positions[3],
-                            positions[4],
-                            positions[5]
-                        )))
-                    else:
-                        # print("Dodajem south zid koji pocinje u ", positions[0], positions[1])
+                # if not copy_state.is_wall_blocking(positions, not self.player_one):
+                if include_state:
+                    wall_placements.append((copy_state, positions))
+                else:
+                    wall_placements.append(positions)
 
-                        available_wall_placements.append((
-                            positions[0],
-                            positions[1],
-                            positions[2],
-                            positions[3],
-                            positions[4],
-                            positions[5]
-                        ))
+        # horizontal walls
+        for i in range(1, self.board.rows, 2):
+            for j in range(0, self.board.cols - 1, 2):
+                if self.is_occupied(i, j):
+                    continue
+                second_part_y = j + 2
+                third_part_y = j + 1
+                if self.is_occupied(i, second_part_y):
+                    continue
+                if self.is_occupied(i, third_part_y):
+                    continue
+                positions = (i, j, i, second_part_y, i, third_part_y)
 
-        # print("VRACAM NIZ DUZINE ", len(available_wall_placements))
-        return available_wall_placements
+                copy_state = deepcopy(self)
+                # if not copy_state.is_wall_blocking(positions, not self.player_one):
+                if include_state:
+                    wall_placements.append((copy_state, positions))
+                else:
+                    wall_placements.append(positions)
+
+        return wall_placements
 
     def place_wall(self, positions):
         self.board.board[positions[0]][positions[1]].is_occupied = True

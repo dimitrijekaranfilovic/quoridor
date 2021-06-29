@@ -124,13 +124,16 @@ class Game:
             self.print_colored_output("Player 2 has no moves left.", Color.CYAN)
             return False
 
-        # available_moves = self.game_state.get_available_wall_placements(False)
+        # available_moves = self.game_state.get_all_child_states()
         # if len(available_moves) == 0:
         #     return False
-        # # print(len(available_moves))
-        # move = choice(available_moves)
-        # # self.game_state.move_piece(move)
-        # self.game_state.place_wall(move)
+        # state, move = choice(available_moves)
+        # if len(move) == 2:
+        #     self.game_state.move_piece(move)
+        #     print("Player 2 has moved his piece.")
+        # else:
+        #     self.game_state.place_wall(move)
+        #     print("Player 2 has placed a wall.")
         # t2 = time()
         # self.print_colored_output("It took him " + str(round(t2 - t1, 2)) + " seconds.", Color.CYAN)
         # return True

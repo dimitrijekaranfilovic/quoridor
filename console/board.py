@@ -7,7 +7,6 @@ from console.util.color import Color
 
 class Board:
     def __init__(self, player_one_starting_pos, player_two_starting_pos):
-        # self.board = []
         self.rows = 17
         self.cols = 17
         self.player_one_starting_pos = player_one_starting_pos
@@ -22,10 +21,8 @@ class Board:
         self.set_up_board()
 
     def set_up_board(self):
-        wall_num = 0
         for i in range(self.rows):
             for j in range(self.cols):
-                # self.board.append([])
                 if i % 2 == 0 and j % 2 == 0:
                     if i == self.player_one_starting_pos[0] and j == self.player_one_starting_pos[1]:
                         self.board[i][j] = Piece(True, "P1")
@@ -34,15 +31,7 @@ class Board:
                     else:
                         self.board[i][j] = (Piece())
                 else:
-
-                    # if j == 1 and (i == 0 or i == 1 or i == 2):
-                    #     val = True
-                    # if i == 0 and j == 1:
-                    #     val = True
-                    # else:
-                    #     val = False
-                    self.board[i][j] = (Wall())
-                    wall_num += 1
+                    self.board[i][j] = Wall()
 
     def print_board(self):
 
