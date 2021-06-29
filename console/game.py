@@ -3,13 +3,36 @@ from time import time
 from console.util.wall_direction import WallDirection
 from console.util.color import Color
 import numpy as np
-from random import choice
+from random import choice, randint
+from console.algorithms.minimax import minimax
+from console.algorithms.minimax_alpha_beta_pruning import minimax_alpha_beta_pruning
+import math
 
 
 class Game:
     def __init__(self):
-        self.game_state = GameState({"algorithms": ["minmax"]})
+        self.player_one_simulation_algorithm = 0
+        self.player_two_simulation_algorithm = 0
+        self.algorithms = ["minimax"]
+        self.game_state = GameState({"algorithms": ["minimax"]})
         # self.player_one_turn = True
+        self.agents = {"minimax": self.minimax_agent}
+
+    def minimax_agent(self):
+        d = {}
+        for child in self.game_state.get_all_child_states():
+            value = minimax(child[0], 1, False)
+            # value = minimax_alpha_beta_pruning(child[0], 3, -math.inf, math.inf, False)
+            d[value] = child
+        if len(d.keys()) == 0:
+            return None
+        winner = d[max(d)]
+        action = winner[1]
+        if len(action) == 2:
+            self.game_state.move_piece(action)
+        else:
+            self.game_state.place_wall(action)
+        return action
 
     def player_one_user(self):
         while True:
@@ -75,20 +98,42 @@ class Game:
                     Game.print_colored_output("Illegal command!", Color.RED)
 
     def player_one_simulation(self):
-        pass
+        t1 = time()
+        print("Player 1 is thinking...\n")
+        action = self.agents[self.algorithms[self.player_one_simulation_algorithm]]()
+        if len(action) == 2:
+            self.print_colored_output("Player 1 has moved his piece.", Color.CYAN)
+        else:
+            self.print_colored_output("Player 1 has placed a wall.", Color.CYAN)
+        t2 = time()
+        self.print_colored_output("It took him " + str(round(t2 - t1, 2)) + " seconds.", Color.CYAN)
 
     def player_two_simulation(self):
         t1 = time()
         print("Player 2 is thinking...\n")
-        available_moves = self.game_state.get_available_moves()
-        move = choice(available_moves)
-        self.game_state.move_piece(move)
-        t2 = time()
-        self.print_colored_output(
-            "He moved the piece to (" + self.game_state.board.input_mappings_reversed[move[0]] + ", " +
-            self.game_state.board.input_mappings_reversed[move[1]] + ")",
-            Color.CYAN)
-        self.print_colored_output("It took him " + str(round(t2 - t1, 2)) + " seconds.", Color.CYAN)
+        action = self.agents[self.algorithms[self.player_two_simulation_algorithm]]()
+        if action is not None:
+            if len(action) == 2:
+                self.print_colored_output("Player 2 has moved his piece.", Color.CYAN)
+            else:
+                self.print_colored_output("Player 2 has placed a wall.", Color.CYAN)
+            t2 = time()
+            self.print_colored_output("It took him " + str(round(t2 - t1, 2)) + " seconds.", Color.CYAN)
+            return True
+        else:
+            self.print_colored_output("Player 2 has no moves left.", Color.CYAN)
+            return False
+
+        # available_moves = self.game_state.get_available_wall_placements(False)
+        # if len(available_moves) == 0:
+        #     return False
+        # # print(len(available_moves))
+        # move = choice(available_moves)
+        # # self.game_state.move_piece(move)
+        # self.game_state.place_wall(move)
+        # t2 = time()
+        # self.print_colored_output("It took him " + str(round(t2 - t1, 2)) + " seconds.", Color.CYAN)
+        # return True
 
     def check_end_state(self):
         if self.game_state.is_end_state():
@@ -119,9 +164,11 @@ class Game:
                 if not self.game_state.is_simulation:
                     self.player_one_user()
                 else:
-                    self.player_one_simulation()
+                    if not self.player_one_simulation():
+                        break
             else:
-                self.player_two_simulation()
+                if not self.player_two_simulation():
+                    break
 
             # self.player_one_turn = not self.player_one_turn
             self.game_state.player_one = not self.game_state.player_one
