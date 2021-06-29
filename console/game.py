@@ -1,4 +1,4 @@
-from console.states.game_state import GameState
+from console.states.game_state import GameState, Mappings
 from time import time
 from console.util.wall_direction import WallDirection
 from console.util.color import Color
@@ -21,7 +21,7 @@ class Game:
     def minimax_agent(self):
         d = {}
         for child in self.game_state.get_all_child_states():
-            value = minimax(child[0], 1, False)
+            value = minimax(child[0], 2, False)
             # value = minimax_alpha_beta_pruning(child[0], 3, -math.inf, math.inf, False)
             d[value] = child
         if len(d.keys()) == 0:
@@ -43,11 +43,11 @@ class Game:
             else:
                 if value.upper().startswith("M"):
                     x_string, y_string = value[1:].split(",")
-                    if x_string.upper() not in self.game_state.board.input_mappings.keys() or y_string.upper() not in self.game_state.board.input_mappings.keys():
+                    if x_string.upper() not in Mappings.INPUT_MAPPINGS.keys() or y_string.upper() not in Mappings.INPUT_MAPPINGS.keys():
                         Game.print_colored_output("Illegal move!", Color.RED)
                     else:
-                        x_int = self.game_state.board.input_mappings[x_string.upper()]
-                        y_int = self.game_state.board.input_mappings[y_string.upper()]
+                        x_int = Mappings.INPUT_MAPPINGS[x_string.upper()]
+                        y_int = Mappings.INPUT_MAPPINGS[y_string.upper()]
                         available_moves = self.game_state.get_available_moves()
 
                         counter = 0
@@ -68,7 +68,7 @@ class Game:
                 elif value.upper().startswith("W"):
                     # place a wall
                     x_string, y_string = value[1:len(value) - 1].split(",")
-                    if x_string.upper() not in self.game_state.board.input_mappings.keys() or y_string.upper() not in self.game_state.board.input_mappings.keys():
+                    if x_string.upper() not in Mappings.INPUT_MAPPINGS.keys() or y_string.upper() not in Mappings.INPUT_MAPPINGS.keys():
                         Game.print_colored_output("Illegal wall placement!", Color.RED)
                     else:
                         dir_string = value[-1]
@@ -84,8 +84,8 @@ class Game:
                             else:
                                 direction = WallDirection.NORTH
 
-                            x_int = self.game_state.board.input_mappings[x_string.upper()]
-                            y_int = self.game_state.board.input_mappings[y_string.upper()]
+                            x_int = Mappings.INPUT_MAPPINGS[x_string.upper()]
+                            y_int = Mappings.INPUT_MAPPINGS[y_string.upper()]
                             is_placement_valid, coords = self.game_state.check_wall_placement(np.array([x_int, y_int]),
                                                                                               direction)
                             if not is_placement_valid:
@@ -125,14 +125,16 @@ class Game:
             return False
 
         # available_moves = self.game_state.get_all_child_states()
+        # available_moves = self.game_state.get_available_wall_placements(False)
         # if len(available_moves) == 0:
         #     return False
-        # state, move = choice(available_moves)
+        # move = choice(available_moves)
         # if len(move) == 2:
         #     self.game_state.move_piece(move)
         #     print("Player 2 has moved his piece.")
         # else:
         #     self.game_state.place_wall(move)
+        #     print(move)
         #     print("Player 2 has placed a wall.")
         # t2 = time()
         # self.print_colored_output("It took him " + str(round(t2 - t1, 2)) + " seconds.", Color.CYAN)
@@ -157,7 +159,7 @@ class Game:
         # print_rules()
         while True:
             print()
-            self.game_state.board.print_board()
+            self.game_state.print_board()
             print()
 
             if self.check_end_state():
