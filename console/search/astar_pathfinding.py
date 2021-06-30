@@ -4,7 +4,7 @@ from console.util.priority_queue_item import PriorityQueueItem
 from queue import PriorityQueue
 
 
-def astar(game_state, check_blockage, heuristic=simple_path_finding_heuristic):
+def astar_pathfinding(game_state, heuristic=simple_path_finding_heuristic):
     visited = set()
 
     def cost_function(path):
@@ -29,8 +29,6 @@ def astar(game_state, check_blockage, heuristic=simple_path_finding_heuristic):
         current_state = path[-1][0]
         current_simplified_state = path[-1][1]
         if current_state.is_goal_state():
-            if check_blockage:
-                return True
             final_path = []
             for state in path:
                 final_path.append(state[1][1])
@@ -42,6 +40,5 @@ def astar(game_state, check_blockage, heuristic=simple_path_finding_heuristic):
                     successor_path = copy(path)
                     successor_path.append(successor)
                     queue.put(PriorityQueueItem(cost_function(successor_path), successor_path))
-    if check_blockage:
-        return False
+
     return 0

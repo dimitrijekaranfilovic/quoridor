@@ -151,21 +151,35 @@ class GameState:
         else:
             return abs(self.player_two_pos[0] - move[0]) == 4
 
+    def is_diagonal(self, move):
+        if self.player_one:
+            return abs(self.player_one_pos[0] - move[0]) == 2 and abs(self.player_one_pos[1] - move[1]) == 2
+        else:
+            return abs(self.player_two_pos[0] - move[0]) == 2 and abs(self.player_two_pos[1] - move[1]) == 2
+
     def is_goal_state(self):
         if self.player_one:
             return self.player_one_pos[0] == 0
         else:
             return self.player_two_pos[0] == 16
 
+    def distance_to_goal(self):
+        if self.player_one:
+            return self.player_one_pos[0]
+        else:
+            return 16 - self.player_two_pos[0]
+
     def get_child_states_with_moves(self):
         available_moves = self.get_available_moves()
         children = []
         for move in available_moves:
-            child = copy(self)
+            child = self.copy()
             child.move_piece(move)
-            cost = 1
+            cost = 1000
             if self.is_jump(move):
-                cost = 0.5
+                cost = 500
+            elif self.is_diagonal(move):
+                cost = 500
             if child.player_one:
                 pos = child.player_one_pos
             else:
@@ -185,8 +199,8 @@ class GameState:
             child.player_one = not self.player_one
             children.append((child, (move[0], move[1])))
         # TODO: bug when calling the get_available_wall_placements function
-        for child in self.get_available_wall_placements(True):
-            children.append(child)
+        # for child in self.get_available_wall_placements(True):
+        #     children.append(child)
         return children
 
     def get_north_pos(self):
@@ -481,6 +495,7 @@ class GameState:
         copy_state = copy(self)
 
         if copy_state.is_wall_blocking(positions, not self.player_one):
+            print("BLOKIRA SRANJE!")
             return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
 
         return True, positions
@@ -498,10 +513,9 @@ class GameState:
             return wall_placements
 
         # vertical walls
-        # for i in range(0, self.board.rows - 1, 2):
         for i in range(0, self.rows - 1, 2):
-            # for j in range(1, self.board.cols, 2):
-            for j in range(1, self.cols, 2):
+            # for j in range(1, self.cols, 2):
+            for j in range(1, 6, 2):
                 if self.is_wall_occupied(i, j):
                     continue
                 second_part_x = i + 2
@@ -513,20 +527,20 @@ class GameState:
                 positions = (i, j, second_part_x, j, third_part_x, j)
                 # copy_state = copy(self)
                 copy_state = self.copy()
-                copy_state.place_wall(positions)
-                copy_state.player_one = not self.player_one
+                # copy_state.place_wall(positions)
+                # copy_state.player_one = not self.player_one
                 # TODO: dodaj provjeru da li blokira
 
-                # if not copy_state.is_wall_blocking(positions, not self.player_one):
-
-                if include_state:
-                    wall_placements.append((copy_state, positions))
-                else:
-                    wall_placements.append(positions)
+                if not copy_state.is_wall_blocking(positions, not self.player_one):
+                    if include_state:
+                        wall_placements.append((copy_state, positions))
+                    else:
+                        wall_placements.append(positions)
 
         # horizontal walls
         for i in range(1, self.rows, 2):
-            for j in range(0, self.cols - 1, 2):
+            for j in range(1, 7, 2):
+                # for j in range(0, self.cols - 1, 2):
                 if self.is_wall_occupied(i, j):
                     continue
                 second_part_y = j + 2
@@ -539,15 +553,15 @@ class GameState:
 
                 # copy_state = copy(self)
                 copy_state = self.copy()
-                copy_state.place_wall(positions)
-                copy_state.player_one = not self.player_one
+                # copy_state.place_wall(positions)
+                # copy_state.player_one = not self.player_one
                 # TODO: dodaj provjeru da li blokira
 
-                # if not copy_state.is_wall_blocking(positions, not self.player_one):
-                if include_state:
-                    wall_placements.append((copy_state, positions))
-                else:
-                    wall_placements.append(positions)
+                if not copy_state.is_wall_blocking(positions, not self.player_one):
+                    if include_state:
+                        wall_placements.append((copy_state, positions))
+                    else:
+                        wall_placements.append(positions)
 
         return wall_placements
 

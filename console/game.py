@@ -1,5 +1,5 @@
 from console.states.game_state import GameState, Mappings
-from time import time
+from time import time, sleep
 from console.util.wall_direction import WallDirection
 from console.util.color import Color
 import numpy as np
@@ -18,16 +18,35 @@ class Game:
         # self.player_one_turn = True
         self.agents = {"minimax": self.minimax_agent}
 
-    def minimax_agent(self):
+    def minimax_agent(self, player_one_minimax):
         d = {}
         for child in self.game_state.get_all_child_states():
-            value = minimax(child[0], 2, False)
-            # value = minimax_alpha_beta_pruning(child[0], 3, -math.inf, math.inf, False)
+            value = minimax(child[0], 3, maximizing_player=False, player_one_minimax=player_one_minimax)
             d[value] = child
         if len(d.keys()) == 0:
             return None
-        winner = d[max(d)]
+        k = max(d)
+        winner = d[k]
         action = winner[1]
+
+        if len(action) == 2:
+            self.game_state.move_piece(action)
+        else:
+            self.game_state.place_wall(action)
+        return action
+
+    def minimax_alpha_beta_agent(self, player_one_minimax):
+        d = {}
+        for child in self.game_state.get_all_child_states():
+            value = minimax_alpha_beta_pruning(child[0], 3, -math.inf, math.inf, maximizing_player=False,
+                                               player_one_minimax=player_one_minimax)
+            d[value] = child
+        if len(d.keys()) == 0:
+            return None
+        k = max(d)
+        winner = d[k]
+        action = winner[1]
+
         if len(action) == 2:
             self.game_state.move_piece(action)
         else:
@@ -69,6 +88,7 @@ class Game:
                     # place a wall
                     x_string, y_string = value[1:len(value) - 1].split(",")
                     if x_string.upper() not in Mappings.INPUT_MAPPINGS.keys() or y_string.upper() not in Mappings.INPUT_MAPPINGS.keys():
+                        print("EO 1!")
                         Game.print_colored_output("Illegal wall placement!", Color.RED)
                     else:
                         dir_string = value[-1]
@@ -89,6 +109,7 @@ class Game:
                             is_placement_valid, coords = self.game_state.check_wall_placement(np.array([x_int, y_int]),
                                                                                               direction)
                             if not is_placement_valid:
+                                print("EO 2!")
                                 Game.print_colored_output("Illegal wall placement!", Color.RED)
                             else:
                                 self.game_state.place_wall(coords)
@@ -100,18 +121,25 @@ class Game:
     def player_one_simulation(self):
         t1 = time()
         print("Player 1 is thinking...\n")
-        action = self.agents[self.algorithms[self.player_one_simulation_algorithm]]()
-        if len(action) == 2:
-            self.print_colored_output("Player 1 has moved his piece.", Color.CYAN)
+        # action = self.agents[self.algorithms[self.player_two_simulation_algorithm]]()
+        action = self.minimax_alpha_beta_agent(True)
+        if action is not None:
+            if len(action) == 2:
+                self.print_colored_output("Player 1 has moved his piece.", Color.CYAN)
+            else:
+                self.print_colored_output("Player 1 has placed a wall.", Color.CYAN)
+            t2 = time()
+            self.print_colored_output("It took him " + str(round(t2 - t1, 2)) + " seconds.", Color.CYAN)
+            return True
         else:
-            self.print_colored_output("Player 1 has placed a wall.", Color.CYAN)
-        t2 = time()
-        self.print_colored_output("It took him " + str(round(t2 - t1, 2)) + " seconds.", Color.CYAN)
+            self.print_colored_output("Player 1 has no moves left.", Color.CYAN)
+            return False
 
     def player_two_simulation(self):
         t1 = time()
         print("Player 2 is thinking...\n")
-        action = self.agents[self.algorithms[self.player_two_simulation_algorithm]]()
+        # action = self.agents[self.algorithms[self.player_two_simulation_algorithm]]()
+        action = self.minimax_alpha_beta_agent(False)
         if action is not None:
             if len(action) == 2:
                 self.print_colored_output("Player 2 has moved his piece.", Color.CYAN)
@@ -123,22 +151,6 @@ class Game:
         else:
             self.print_colored_output("Player 2 has no moves left.", Color.CYAN)
             return False
-
-        # available_moves = self.game_state.get_all_child_states()
-        # available_moves = self.game_state.get_available_wall_placements(False)
-        # if len(available_moves) == 0:
-        #     return False
-        # move = choice(available_moves)
-        # if len(move) == 2:
-        #     self.game_state.move_piece(move)
-        #     print("Player 2 has moved his piece.")
-        # else:
-        #     self.game_state.place_wall(move)
-        #     print(move)
-        #     print("Player 2 has placed a wall.")
-        # t2 = time()
-        # self.print_colored_output("It took him " + str(round(t2 - t1, 2)) + " seconds.", Color.CYAN)
-        # return True
 
     def check_end_state(self):
         if self.game_state.is_end_state():
@@ -169,10 +181,14 @@ class Game:
                 if not self.game_state.is_simulation:
                     self.player_one_user()
                 else:
-                    if not self.player_one_simulation():
+                    res = self.player_one_simulation()
+                    sleep(1.5)
+                    if not res:
                         break
             else:
-                if not self.player_two_simulation():
+                res = self.player_two_simulation()
+                sleep(1.5)
+                if not res:
                     break
 
             # self.player_one_turn = not self.player_one_turn
