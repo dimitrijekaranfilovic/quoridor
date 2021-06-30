@@ -1,9 +1,7 @@
-#from console.board import Board
 from console.util.wall_direction import WallDirection
 from exceptions.invalid_config_exception import InvalidConfigException
 import numpy as np
-#from console.elements.wall import Wall
-from copy import copy, deepcopy
+from copy import copy
 from console.search.astar import astar
 from console.util.color import Color
 
@@ -37,42 +35,39 @@ class GameState:
         self.config = config
         self.is_simulation = len(config["algorithms"]) == 2
 
-        # self.board = Board(self.player_one_pos, self.player_two_pos)
         self.player_one = True
-        # self.value = 0
         self.rows = 17
         self.cols = 17
+        self.player_one_walls_num = 10
+        self.player_two_wall_num = 10
 
         if initialize:
-            self.player_one_walls_num = 10
-            self.player_two_wall_num = 10
             self.player_one_pos = np.array([16, 8])
             self.player_two_pos = np.array([0, 8])
-            self.board = np.zeros((17, 17), dtype=int)
+
+            self.board = np.zeros((289,), dtype=int)
             self.set_up_board()
 
-        # TODO: mozda stavi da imas kolekciju slobodnih mjesta za zidove, pa kad se koji zid stavi da se iz te kolekcije mice
-
-    def copy(self):
-        game_state = GameState(self.config, False)
-        game_state.player_one_walls_num = self.player_one_walls_num
-        game_state.player_two_wall_num = self.player_two_wall_num
-        game_state.player_one_pos = np.copy(self.player_one_pos)
-        game_state.player_two_pos = np.copy(self.player_two_pos)
-        game_state.player_one = self.player_one
-        game_state.board = np.copy(self.board)
-        return game_state
+    # TODO: mozda stavi da imas kolekciju slobodnih mjesta za zidove, pa kad se koji zid stavi da se iz te kolekcije mice
 
     def set_up_board(self):
         for i in range(self.rows):
             for j in range(self.cols):
                 if i % 2 == 0 and j % 2 == 0:
-                    self.board[i][j] = BoardPieceStatus.FREE_PLAYER
+                    self.board[i * self.cols + j] = BoardPieceStatus.FREE_PLAYER
                 else:
-                    self.board[i][j] = BoardPieceStatus.FREE_WALL
+                    self.board[i * self.cols + j] = BoardPieceStatus.FREE_WALL
 
-        self.board[self.player_one_pos[0]][self.player_one_pos[1]] = BoardPieceStatus.OCCUPIED_BY_PLAYER_1
-        self.board[self.player_two_pos[0]][self.player_two_pos[1]] = BoardPieceStatus.OCCUPIED_BY_PLAYER_2
+        self.board[self.player_one_pos[0] * self.cols + self.player_one_pos[1]] = BoardPieceStatus.OCCUPIED_BY_PLAYER_1
+        self.board[self.player_two_pos[0] * self.cols + self.player_two_pos[1]] = BoardPieceStatus.OCCUPIED_BY_PLAYER_2
+
+    def copy(self):
+        game_state = copy(self)
+        game_state.player_one_pos = copy(self.player_one_pos)
+        game_state.player_two_pos = copy(self.player_two_pos)
+        game_state.board = []
+        game_state.board.extend(self.board)
+        return game_state
 
     def print_board(self):
 
@@ -96,15 +91,16 @@ class GameState:
             else:
                 print(Color.YELLOW + "{0:>2}  ".format(Mappings.INPUT_LETTERS[i].lower()) + Color.RESET, end="")
             for j in range(self.cols):
-                if self.board[i][j] == BoardPieceStatus.FREE_PLAYER:
+                index = i * self.cols + j
+                if self.board[index] == BoardPieceStatus.FREE_PLAYER:
                     print("{0:4}".format(""), end="")
-                elif self.board[i][j] == BoardPieceStatus.OCCUPIED_BY_PLAYER_1:
+                elif self.board[index] == BoardPieceStatus.OCCUPIED_BY_PLAYER_1:
                     print(Color.GREEN + " {0:2} ".format("P1") + Color.RESET, end="")
-                elif self.board[i][j] == BoardPieceStatus.OCCUPIED_BY_PLAYER_2:
+                elif self.board[index] == BoardPieceStatus.OCCUPIED_BY_PLAYER_2:
                     print(Color.RED + " {0:2} ".format("P2") + Color.RESET, end="")
                 else:
                     if i % 2 == 1 and j % 2 == 0:
-                        if self.board[i][j] == BoardPieceStatus.FREE_WALL:
+                        if self.board[index] == BoardPieceStatus.FREE_WALL:
                             line = ""
                             for k in range(5):
                                 line += "\u23AF"
@@ -115,12 +111,12 @@ class GameState:
                                 line += "\u2501"
                             print(Color.YELLOW + line + Color.RESET, end="")
                     elif i % 2 == 0 and j % 2 == 1:
-                        if self.board[i][j] == BoardPieceStatus.FREE_WALL:
+                        if self.board[index] == BoardPieceStatus.FREE_WALL:
                             print(" |", end="")
                         else:
                             print(Color.YELLOW + " \u2503" + Color.RESET, end="")
                     elif i % 2 == 1 and j % 2 == 1:
-                        if self.board[i][j] == BoardPieceStatus.FREE_WALL:
+                        if self.board[index] == BoardPieceStatus.FREE_WALL:
                             print("o", end="")
                         else:
                             print(Color.YELLOW + "O" + Color.RESET, end="")
@@ -136,29 +132,18 @@ class GameState:
             raise InvalidConfigException("Invalid number of items in 'algorithms' in config!")
 
     def is_piece_occupied(self, i, j):
-        return self.board[i][j] == BoardPieceStatus.OCCUPIED_BY_PLAYER_1 or self.board[i][
-            j] == BoardPieceStatus.OCCUPIED_BY_PLAYER_2
+        index = i * self.cols + j
+        return self.board[index] == BoardPieceStatus.OCCUPIED_BY_PLAYER_1 or self.board[
+            index] == BoardPieceStatus.OCCUPIED_BY_PLAYER_2
 
     def is_not_piece_occupied(self, i, j):
         return not self.is_piece_occupied(i, j)
 
     def is_wall_occupied(self, i, j):
-        return self.board[i][j] == BoardPieceStatus.OCCUPIED_WALL
+        return self.board[i * self.cols + j] == BoardPieceStatus.OCCUPIED_WALL
 
     def is_not_wall_occupied(self, i, j):
         return not self.is_wall_occupied(i, j)
-
-    # def is_occupied(self, i, j):
-    #     return self.board.board[i][j].is_occupied
-
-    # def is_not_occupied(self, i, j):
-    #     return not self.board.board[i][j].is_occupied
-
-    # def is_wall(self, i, j):
-    #     return isinstance(self.board.board[i][j], Wall)
-    #
-    # def is_not_wall(self, i, j):
-    #     return not isinstance(self.board.board[i][j], Wall)
 
     def is_jump(self, move):
         if self.player_one:
@@ -177,8 +162,6 @@ class GameState:
         children = []
         for move in available_moves:
             child = copy(self)
-            # child = self.copy()
-            # child = deepcopy(self)
             child.move_piece(move)
             cost = 1
             if self.is_jump(move):
@@ -187,7 +170,6 @@ class GameState:
                 pos = child.player_one_pos
             else:
                 pos = child.player_two_pos
-            # simplified_child_state = ((pos[0], pos[1]), (pos[0] - move[0], pos[1] - move[1]), cost)
             simplified_child_state = ((pos[0], pos[1]), (move[0], move[1]), cost)
 
             children.append((child, simplified_child_state))
@@ -197,9 +179,8 @@ class GameState:
         children = []
         available_moves = self.get_available_moves()
         for move in available_moves:
-            # child = deepcopy(self)
-            # child = self.copy()
-            child = copy(self)
+            # child = copy(self)
+            child = self.copy()
             child.move_piece(move)
             child.player_one = not self.player_one
             children.append((child, (move[0], move[1])))
@@ -211,7 +192,6 @@ class GameState:
     def get_north_pos(self):
         """
         north_pos is the position one tile towards the opposite end of the board
-        :param player_one: player one's turn
         :return: array which contains available move
         """
 
@@ -225,7 +205,6 @@ class GameState:
             wall = 1
 
         if 0 <= i + move <= 16 and 0 <= i + wall <= 16:
-            # if self.is_not_occupied(i + move, j) and self.is_not_occupied(i + wall, j):
             if self.is_not_piece_occupied(i + move, j) and self.is_not_wall_occupied(i + wall, j):
                 return np.array([i + move, j])
             else:
@@ -237,7 +216,6 @@ class GameState:
         """
         south_pos is the position one tile towards the player's end of the board
 
-        :param player_one: player one's turn
         :return: array which contains available move
         """
 
@@ -251,7 +229,6 @@ class GameState:
             wall_x = -1
 
         if 0 <= i + move_x <= 16 and 0 <= i + wall_x <= 16:
-            # if self.is_not_occupied(i + wall_x, j) and self.is_not_occupied(i + move_x, j):
             if self.is_not_wall_occupied(i + wall_x, j) and self.is_not_piece_occupied(i + move_x, j):
                 return np.array([i + move_x, j])
             else:
@@ -263,7 +240,6 @@ class GameState:
         """
         west_pos is the position one tile towards the left side of the board from the player's perspective
 
-        :param player_one: player one's turn
         :return: array which contains available move
         """
 
@@ -277,7 +253,6 @@ class GameState:
             wall_y = 1
 
         if 0 <= j + move_y <= 16 and 0 <= j + wall_y <= 16:
-            # if self.is_not_occupied(i, j + move_y) and self.is_not_occupied(i, j + wall_y):
             if self.is_not_piece_occupied(i, j + move_y) and self.is_not_wall_occupied(i, j + wall_y):
                 return np.array([i, j + move_y])
             else:
@@ -289,7 +264,6 @@ class GameState:
         """
         east_pos is the position one tile towards the right side of the board from the player's perspective
 
-        :param player_one: player one's turn
         :return: array which contains available move
         """
 
@@ -303,7 +277,6 @@ class GameState:
             wall_y = -1
 
         if 0 <= j + move_y <= 16 and 0 <= j + wall_y <= 16:
-            # if self.is_not_occupied(i, j + move_y) and self.is_not_occupied(i, j + wall_y):
             if self.is_not_piece_occupied(i, j + move_y) and self.is_not_wall_occupied(i, j + wall_y):
                 return np.array([i, j + move_y])
             else:
@@ -314,7 +287,6 @@ class GameState:
     def get_jump_pos(self):
         """
         jump is available only if the north_pos is occupied by the opponent and behind him isn't a wall
-        :param player_one: player one's turn
         :return: array which contains available move
         """
 
@@ -332,9 +304,6 @@ class GameState:
             wall2 = 3
 
         if 0 <= i + jump <= 16:
-            # if self.is_not_occupied(i + wall1, j) and \
-            #         self.is_occupied(i + move, j) and \
-            #         self.is_not_occupied(i + wall2, j):
             if self.is_not_wall_occupied(i + wall1, j) and self.is_piece_occupied(i + move, j) and \
                     self.is_not_wall_occupied(i + wall2, j):
                 return np.array([i + jump, j])
@@ -346,7 +315,6 @@ class GameState:
     def get_northwest_pos(self):
         """
         northwest and northeast positions are only available
-        :param player_one: player one's turn
         :return: array which contains available move
         """
 
@@ -373,9 +341,6 @@ class GameState:
                 0 <= j + wall_y <= 16 and \
                 0 <= i + occupied_x <= 16 and \
                 0 <= i + occupied_wall <= 16:
-            # if self.is_not_occupied(i + wall_x, j + wall_y) and \
-            #         self.is_occupied(i + occupied_x, j) and \
-            #         self.is_occupied(i + occupied_wall, j):
             if self.is_not_wall_occupied(i + wall_x, j + wall_y) and \
                     self.is_piece_occupied(i + occupied_x, j) and \
                     self.is_wall_occupied(i + occupied_wall, j):
@@ -410,9 +375,6 @@ class GameState:
                 0 <= j + wall_y <= 16 and \
                 0 <= i + occupied_x <= 16 and \
                 0 <= i + occupied_wall <= 16:
-            # if self.is_not_occupied(i + wall_x, j + wall_y) and \
-            #         self.is_occupied(i + occupied_x, j) and \
-            #         self.is_occupied(i + occupied_wall, j):
             if self.is_not_wall_occupied(i + wall_x, j + wall_y) and \
                     self.is_piece_occupied(i + occupied_x, j) and \
                     self.is_wall_occupied(i + occupied_wall, j):
@@ -423,7 +385,6 @@ class GameState:
             return np.array([])
 
     def get_available_moves(self):
-        # print("Pozvao get_available_moves")
         north = self.get_north_pos()
         south = self.get_south_pos()
         east = self.get_east_pos()
@@ -466,7 +427,6 @@ class GameState:
         if starting_pos[0] % 2 == 1 and starting_pos[1] == 1:
             return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
 
-        # if self.is_occupied(starting_pos[0], starting_pos[1]):
         if self.is_wall_occupied(starting_pos[0], starting_pos[1]):
             return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
 
@@ -509,13 +469,8 @@ class GameState:
                 and not 0 <= third_piece_x <= 16 and not 0 <= third_piece_y <= 16:
             return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
 
-        # if self.is_occupied(starting_pos[0], starting_pos[1]):
-        #     return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
-
-        # if self.is_occupied(second_piece_x, second_piece_y):
         if self.is_wall_occupied(second_piece_x, second_piece_y):
             return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
-        # if self.is_occupied(third_piece_x, third_piece_y):
         if self.is_wall_occupied(third_piece_x, third_piece_y):
             return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
 
@@ -523,8 +478,6 @@ class GameState:
         positions = np.array(
             [starting_pos[0], starting_pos[1], second_piece_x, second_piece_y, third_piece_x, third_piece_y])
 
-        # copy_state = deepcopy(self)
-        # copy_state = self.copy()
         copy_state = copy(self)
 
         if copy_state.is_wall_blocking(positions, not self.player_one):
@@ -549,23 +502,21 @@ class GameState:
         for i in range(0, self.rows - 1, 2):
             # for j in range(1, self.board.cols, 2):
             for j in range(1, self.cols, 2):
-                # if self.is_occupied(i, j):
                 if self.is_wall_occupied(i, j):
                     continue
                 second_part_x = i + 2
                 third_part_x = i + 1
-                # if self.is_occupied(second_part_x, j):
                 if self.is_wall_occupied(second_part_x, j):
                     continue
-                # if self.is_occupied(third_part_x, j):
                 if self.is_wall_occupied(third_part_x, j):
                     continue
                 positions = (i, j, second_part_x, j, third_part_x, j)
-                copy_state = deepcopy(self)
-                # copy_state = self.copy()
                 # copy_state = copy(self)
+                copy_state = self.copy()
                 copy_state.place_wall(positions)
                 copy_state.player_one = not self.player_one
+                # TODO: dodaj provjeru da li blokira
+
                 # if not copy_state.is_wall_blocking(positions, not self.player_one):
 
                 if include_state:
@@ -574,28 +525,24 @@ class GameState:
                     wall_placements.append(positions)
 
         # horizontal walls
-        # for i in range(1, self.board.rows, 2):
         for i in range(1, self.rows, 2):
-            # for j in range(0, self.board.cols - 1, 2):
             for j in range(0, self.cols - 1, 2):
-                # if self.is_occupied(i, j):
                 if self.is_wall_occupied(i, j):
                     continue
                 second_part_y = j + 2
                 third_part_y = j + 1
-                # if self.is_occupied(i, second_part_y):
                 if self.is_wall_occupied(i, second_part_y):
                     continue
-                # if self.is_occupied(i, third_part_y):
                 if self.is_wall_occupied(i, third_part_y):
                     continue
                 positions = (i, j, i, second_part_y, i, third_part_y)
 
-                copy_state = deepcopy(self)
-                # copy_state = self.copy()
                 # copy_state = copy(self)
+                copy_state = self.copy()
                 copy_state.place_wall(positions)
                 copy_state.player_one = not self.player_one
+                # TODO: dodaj provjeru da li blokira
+
                 # if not copy_state.is_wall_blocking(positions, not self.player_one):
                 if include_state:
                     wall_placements.append((copy_state, positions))
@@ -605,13 +552,8 @@ class GameState:
         return wall_placements
 
     def place_wall(self, positions):
-        # self.board.board[positions[0]][positions[1]].is_occupied = True
-        # self.board.board[positions[2]][positions[3]].is_occupied = True
-        # self.board.board[positions[4]][positions[5]].is_occupied = True
         for i in range(0, 5, 2):
-            self.board[positions[i]][positions[i + 1]] = BoardPieceStatus.OCCUPIED_WALL
-        # self.board[positions[0]][positions[1]] = BoardPieceStatus.OCCUPIED_WALL
-        # self.board[positions[]]
+            self.board[positions[i] * self.cols + positions[i + 1]] = BoardPieceStatus.OCCUPIED_WALL
 
         if self.player_one:
             self.player_one_walls_num -= 1
@@ -623,24 +565,16 @@ class GameState:
 
         if self.player_one:
             old_i, old_j = self.player_one_pos
-            # self.player_one_pos = np.array([new_i, new_j])
             self.player_one_pos[0] = new_i
             self.player_one_pos[1] = new_j
-            self.board[new_i][new_j] = BoardPieceStatus.OCCUPIED_BY_PLAYER_1
+            self.board[new_i * self.cols + new_j] = BoardPieceStatus.OCCUPIED_BY_PLAYER_1
         else:
             old_i, old_j = self.player_two_pos
-            # self.player_two_pos = np.array([new_i, new_j])
             self.player_two_pos[0] = new_i
             self.player_two_pos[1] = new_j
-            self.board[new_i][new_j] = BoardPieceStatus.OCCUPIED_BY_PLAYER_2
+            self.board[new_i * self.cols + new_j] = BoardPieceStatus.OCCUPIED_BY_PLAYER_2
 
-        self.board[old_i][old_j] = BoardPieceStatus.FREE_PLAYER
-        # self.board.board[old_i][old_j].is_occupied = False
-        # self.board.board[old_i][old_j].name = ""
-        #
-        # self.board.board[new_i][new_j].is_occupied = True
-        #
-        # self.board.board[new_i][new_j].name = name
+        self.board[old_i * self.cols + old_j] = BoardPieceStatus.FREE_PLAYER
 
     def is_end_state(self):
         return self.player_one_pos[0] == 0 or self.player_two_pos[0] == 16
