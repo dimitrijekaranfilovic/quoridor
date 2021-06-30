@@ -67,28 +67,18 @@ class Game:
                     else:
                         x_int = Mappings.INPUT_MAPPINGS[x_string.upper()]
                         y_int = Mappings.INPUT_MAPPINGS[y_string.upper()]
-                        available_moves = self.game_state.get_available_moves()
-
-                        counter = 0
-                        for i in range(len(available_moves)):
-                            if available_moves[i][0] == x_int and available_moves[i][1] == y_int:
-                                break
-                            else:
-                                counter += 1
-
-                        if counter == len(available_moves):
+                        available_moves = self.game_state.get_available_moves(False)
+                        move = (x_int, y_int)
+                        if move not in available_moves:
                             Game.print_colored_output("Illegal move!", Color.RED)
                         else:
-                            # player 1 make a move
-                            self.game_state.move_piece(np.array([x_int, y_int]))
+                            self.game_state.move_piece(move)
                             break
 
-                        counter = 0
                 elif value.upper().startswith("W"):
                     # place a wall
                     x_string, y_string = value[1:len(value) - 1].split(",")
                     if x_string.upper() not in Mappings.INPUT_MAPPINGS.keys() or y_string.upper() not in Mappings.INPUT_MAPPINGS.keys():
-                        print("EO 1!")
                         Game.print_colored_output("Illegal wall placement!", Color.RED)
                     else:
                         dir_string = value[-1]
@@ -109,7 +99,6 @@ class Game:
                             is_placement_valid, coords = self.game_state.check_wall_placement(np.array([x_int, y_int]),
                                                                                               direction)
                             if not is_placement_valid:
-                                print("EO 2!")
                                 Game.print_colored_output("Illegal wall placement!", Color.RED)
                             else:
                                 self.game_state.place_wall(coords)

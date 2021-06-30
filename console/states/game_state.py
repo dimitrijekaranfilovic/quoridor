@@ -170,7 +170,7 @@ class GameState:
             return 16 - self.player_two_pos[0]
 
     def get_child_states_with_moves(self):
-        available_moves = self.get_available_moves()
+        available_moves = self.get_available_moves(False)
         children = []
         for move in available_moves:
             child = self.copy()
@@ -193,17 +193,13 @@ class GameState:
         children = []
         available_moves = self.get_available_moves()
         for move in available_moves:
-            # child = copy(self)
-            child = self.copy()
-            child.move_piece(move)
-            child.player_one = not self.player_one
-            children.append((child, (move[0], move[1])))
+            children.append(move)
         # TODO: bug when calling the get_available_wall_placements function
         # for child in self.get_available_wall_placements(True):
         #     children.append(child)
         return children
 
-    def get_north_pos(self):
+    def get_north_pos(self, include_state=True):
         """
         north_pos is the position one tile towards the opposite end of the board
         :return: array which contains available move
@@ -220,13 +216,20 @@ class GameState:
 
         if 0 <= i + move <= 16 and 0 <= i + wall <= 16:
             if self.is_not_piece_occupied(i + move, j) and self.is_not_wall_occupied(i + wall, j):
-                return np.array([i + move, j])
+                position = (i + move, j)
+                if include_state:
+                    copy_state = self.copy()
+                    copy_state.move_piece(position)
+                    copy_state.player_one = not self.player_one
+                    return copy_state, position
+                else:
+                    return position
             else:
-                return np.array([])
+                return None
         else:
-            return np.array([])
+            return None
 
-    def get_south_pos(self):
+    def get_south_pos(self, include_state=True):
         """
         south_pos is the position one tile towards the player's end of the board
 
@@ -244,13 +247,20 @@ class GameState:
 
         if 0 <= i + move_x <= 16 and 0 <= i + wall_x <= 16:
             if self.is_not_wall_occupied(i + wall_x, j) and self.is_not_piece_occupied(i + move_x, j):
-                return np.array([i + move_x, j])
+                position = (i + move_x, j)
+                if include_state:
+                    copy_state = self.copy()
+                    copy_state.move_piece(position)
+                    copy_state.player_one = not self.player_one
+                    return copy_state, position
+                else:
+                    return position
             else:
-                return np.array([])
+                return None
         else:
-            return np.array([])
+            return None
 
-    def get_west_pos(self):
+    def get_west_pos(self, include_state=True):
         """
         west_pos is the position one tile towards the left side of the board from the player's perspective
 
@@ -268,13 +278,21 @@ class GameState:
 
         if 0 <= j + move_y <= 16 and 0 <= j + wall_y <= 16:
             if self.is_not_piece_occupied(i, j + move_y) and self.is_not_wall_occupied(i, j + wall_y):
-                return np.array([i, j + move_y])
+                position = (i, j + move_y)
+                if include_state:
+                    copy_state = self.copy()
+                    copy_state.move_piece(position)
+                    copy_state.player_one = not self.player_one
+                    return copy_state, position
+                # return np.array([i, j + move_y])
+                else:
+                    return position
             else:
-                return np.array([])
+                return None
         else:
-            return np.array([])
+            return None
 
-    def get_east_pos(self):
+    def get_east_pos(self, include_state=True):
         """
         east_pos is the position one tile towards the right side of the board from the player's perspective
 
@@ -292,13 +310,21 @@ class GameState:
 
         if 0 <= j + move_y <= 16 and 0 <= j + wall_y <= 16:
             if self.is_not_piece_occupied(i, j + move_y) and self.is_not_wall_occupied(i, j + wall_y):
-                return np.array([i, j + move_y])
+                position = (i, j + move_y)
+                if include_state:
+                    copy_state = self.copy()
+                    copy_state.move_piece(position)
+                    copy_state.player_one = not self.player_one
+                    return copy_state, position
+                else:
+                    return position
+                # return np.array([i, j + move_y])
             else:
-                return np.array([])
+                return None
         else:
-            return np.array([])
+            return None
 
-    def get_jump_pos(self):
+    def get_jump_pos(self, include_state=True):
         """
         jump is available only if the north_pos is occupied by the opponent and behind him isn't a wall
         :return: array which contains available move
@@ -320,13 +346,21 @@ class GameState:
         if 0 <= i + jump <= 16:
             if self.is_not_wall_occupied(i + wall1, j) and self.is_piece_occupied(i + move, j) and \
                     self.is_not_wall_occupied(i + wall2, j):
-                return np.array([i + jump, j])
+                position = (i + jump, j)
+                if include_state:
+                    copy_state = self.copy()
+                    copy_state.move_piece(position)
+                    copy_state.player_one = not self.player_one
+                    return copy_state, position
+                else:
+                    return position
+                # return np.array([i + jump, j])
             else:
-                return np.array([])
+                return None
         else:
-            return np.array([])
+            return None
 
-    def get_northwest_pos(self):
+    def get_northwest_pos(self, include_state=True):
         """
         northwest and northeast positions are only available
         :return: array which contains available move
@@ -358,13 +392,22 @@ class GameState:
             if self.is_not_wall_occupied(i + wall_x, j + wall_y) and \
                     self.is_piece_occupied(i + occupied_x, j) and \
                     self.is_wall_occupied(i + occupied_wall, j):
-                return np.array([i + move_x, j + move_y])
+                position = (i + move_x, j + move_y)
+                if include_state:
+                    copy_state = self.copy()
+                    copy_state.move_piece(position)
+                    copy_state.player_one = not self.player_one
+                    return copy_state, position
+                else:
+                    return position
+                # return np.array([i + move_x, j + move_y])
             else:
-                return np.array([])
+                # return np.array([])
+                return None
         else:
-            return np.array([])
+            return None
 
-    def get_northeast_pos(self):
+    def get_northeast_pos(self, include_state=True):
 
         if self.player_one:
             i, j = self.player_one_pos
@@ -392,37 +435,44 @@ class GameState:
             if self.is_not_wall_occupied(i + wall_x, j + wall_y) and \
                     self.is_piece_occupied(i + occupied_x, j) and \
                     self.is_wall_occupied(i + occupied_wall, j):
-                return np.array([i + move_x, j + move_y])
+                position = (i + move_x, j + move_y)
+                if include_state:
+                    copy_state = self.copy()
+                    copy_state.move_piece(position)
+                    copy_state.player_one = not self.player_one
+                    return copy_state, position
+                else:
+                    return position
             else:
-                return np.array([])
+                return None
         else:
-            return np.array([])
+            return None
 
-    def get_available_moves(self):
-        north = self.get_north_pos()
-        south = self.get_south_pos()
-        east = self.get_east_pos()
-        west = self.get_west_pos()
-        jump = self.get_jump_pos()
-        north_east = self.get_northeast_pos()
-        north_west = self.get_northwest_pos()
+    def get_available_moves(self, include_state=True):
+        north = self.get_north_pos(include_state)
+        south = self.get_south_pos(include_state)
+        east = self.get_east_pos(include_state)
+        west = self.get_west_pos(include_state)
+        jump = self.get_jump_pos(include_state)
+        north_east = self.get_northeast_pos(include_state)
+        north_west = self.get_northwest_pos(include_state)
 
         array = []
-        if north.size != 0:
+        if north is not None:
             array.append(north)
-        if south.size != 0:
+        if south is not None:
             array.append(south)
-        if east.size != 0:
+        if east is not None:
             array.append(east)
-        if west.size != 0:
+        if west is not None:
             array.append(west)
-        if jump.size != 0:
+        if jump is not None:
             array.append(jump)
-        if north_east.size != 0:
+        if north_east is not None:
             array.append(north_east)
-        if north_west.size != 0:
+        if north_west is not None:
             array.append(north_west)
-        return np.array(array)  # TODO: vidi je l ovdje greska, kao i u onim
+        return array
 
     def check_wall_placement(self, starting_pos, direction):
         """
@@ -505,42 +555,32 @@ class GameState:
         self.player_one = player_one
         return not astar(self, True)
 
-    def get_available_wall_placements(self, include_state=False):
+    def get_partly_wall_placements(self, start_row, end_row, include_state=True):
         wall_placements = []
-        if self.player_one and self.player_one_walls_num == 0:
-            return wall_placements
-        elif not self.player_one and self.player_two_wall_num == 0:
-            return wall_placements
-
         # vertical walls
-        for i in range(0, self.rows - 1, 2):
-            # for j in range(1, self.cols, 2):
-            for j in range(1, 6, 2):
+        for i in range(start_row, end_row):
+            for j in range(1, self.cols, 2):
                 if self.is_wall_occupied(i, j):
                     continue
                 second_part_x = i + 2
                 third_part_x = i + 1
+
                 if self.is_wall_occupied(second_part_x, j):
                     continue
                 if self.is_wall_occupied(third_part_x, j):
                     continue
                 positions = (i, j, second_part_x, j, third_part_x, j)
-                # copy_state = copy(self)
-                copy_state = self.copy()
-                # copy_state.place_wall(positions)
-                # copy_state.player_one = not self.player_one
-                # TODO: dodaj provjeru da li blokira
-
-                if not copy_state.is_wall_blocking(positions, not self.player_one):
-                    if include_state:
+                if include_state:
+                    copy_state = self.copy()
+                    if not copy_state.is_wall_blocking(positions, not self.player_one):
                         wall_placements.append((copy_state, positions))
-                    else:
-                        wall_placements.append(positions)
+                else:
+                    wall_placements.append(positions)
 
-        # horizontal walls
-        for i in range(1, self.rows, 2):
-            for j in range(1, 7, 2):
-                # for j in range(0, self.cols - 1, 2):
+        if start_row == 0:
+            start_row += 1
+        for i in range(start_row, end_row):
+            for j in range(0, self.cols, 2):
                 if self.is_wall_occupied(i, j):
                     continue
                 second_part_y = j + 2
@@ -550,19 +590,31 @@ class GameState:
                 if self.is_wall_occupied(i, third_part_y):
                     continue
                 positions = (i, j, i, second_part_y, i, third_part_y)
-
-                # copy_state = copy(self)
-                copy_state = self.copy()
-                # copy_state.place_wall(positions)
-                # copy_state.player_one = not self.player_one
-                # TODO: dodaj provjeru da li blokira
-
-                if not copy_state.is_wall_blocking(positions, not self.player_one):
-                    if include_state:
+                if include_state:
+                    copy_state = self.copy()
+                    if not copy_state.is_wall_blocking(positions, not self.player_one):
                         wall_placements.append((copy_state, positions))
-                    else:
-                        wall_placements.append(positions)
+                else:
+                    wall_placements.append(positions)
 
+        return wall_placements
+
+    def get_available_wall_placements(self, include_state=True):
+        wall_placements = []
+        if self.player_one and self.player_one_walls_num == 0:
+            return wall_placements
+        elif not self.player_one and self.player_two_wall_num == 0:
+            return wall_placements
+
+        first_wall_placements = self.get_partly_wall_placements(0, 4, include_state)
+        second_wall_placements = self.get_partly_wall_placements(4, 8, include_state)
+        third_wall_placements = self.get_partly_wall_placements(8, 12, include_state)
+        fourth_wall_placements = self.get_partly_wall_placements(12, 14, include_state)
+
+        wall_placements.extend(first_wall_placements)
+        wall_placements.extend(second_wall_placements)
+        wall_placements.extend(third_wall_placements)
+        wall_placements.extend(fourth_wall_placements)
         return wall_placements
 
     def place_wall(self, positions):
