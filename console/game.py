@@ -36,7 +36,8 @@ class Game:
 
     def minimax_alpha_beta_agent(self, player_one_minimax):
         d = {}
-        for child in self.game_state.get_all_child_states():
+        children = self.game_state.get_all_child_states()
+        for child in children:
             value = minimax_alpha_beta_pruning(child[0], 3, -math.inf, math.inf, maximizing_player=False,
                                                player_one_minimax=player_one_minimax)
             d[value] = child

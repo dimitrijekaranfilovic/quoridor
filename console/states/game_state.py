@@ -472,8 +472,7 @@ class GameState:
         north_west = self.get_northwest_pos(include_state)
 
         array = []
-        if north is not None:
-            array.append(north)
+
         if south is not None:
             array.append(south)
         if east is not None:
@@ -486,6 +485,8 @@ class GameState:
             array.append(north_east)
         if north_west is not None:
             array.append(north_west)
+        if north is not None:
+            array.append(north)
         return array
 
     def check_wall_placement(self, starting_pos, direction):
