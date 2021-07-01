@@ -68,8 +68,7 @@ class GameState:
         game_state = copy(self)
         game_state.player_one_pos = copy(self.player_one_pos)
         game_state.player_two_pos = copy(self.player_two_pos)
-        game_state.board = []
-        game_state.board.extend(self.board)
+        game_state.board = copy(self.board)
         return game_state
 
     def print_game_stats(self):
@@ -207,7 +206,10 @@ class GameState:
         for move in available_moves:
             children.append(move)
         # TODO: bug when calling the get_available_wall_placements function
-        available_wall_placements = self.get_available_wall_placements(True)
+
+        available_wall_placements = []
+        if not self.player_one:
+            available_wall_placements = self.get_available_wall_placements_for_player_two(True)
         for wall_placement in available_wall_placements:
             children.append(wall_placement)
 
@@ -570,8 +572,72 @@ class GameState:
         self.player_one = player_one
         return not astar(self, True)
 
-    def get_available_wall_placements(self, include_state=True):
-        return []
+    def get_available_wall_placements_for_player_two(self, include_state=True):
+        wall_placements = []
+
+        # TODO: testiraj dodatno
+        # TODO: dodaj generisanje zidova za player_one
+
+        start_row = max(self.player_one_pos[0] - 3, 0)
+        end_row = min(self.player_one_pos[0] + 2, 16)
+        start_col = max(self.player_one_pos[1] - 3, 0)
+        end_col = min(self.player_one_pos[1] + 3, 16)
+        # horizontal
+        end = end_col - 3
+        if end_col == 16:
+            end = end_col + 1
+        start_1 = start_col + 1
+        if start_col == 0:
+            start_1 = start_col
+            end = end_col - 2
+        for i in range(start_row, end_row, 2):
+            for j in range(start_1, end, 2):
+                if self.is_wall_occupied(i, j):
+                    continue
+                second_part_y = j + 2
+                third_part_y = j + 1
+                if not start_col <= second_part_y <= end_col:
+                    continue
+                if not start_col <= third_part_y <= end_col:
+                    continue
+                if self.is_wall_occupied(i, second_part_y):
+                    continue
+                if self.is_wall_occupied(i, third_part_y):
+                    continue
+                positions = (i, j, i, second_part_y, i, third_part_y)
+                if include_state:
+                    copy_state = self.copy()
+                    if not copy_state.is_wall_blocking(positions, not self.player_one):
+                        wall_placements.append((copy_state, positions))
+                else:
+                    wall_placements.append(positions)
+
+        # vertical
+        start_2 = start_col
+        if start_2 == 0:
+            start_2 = start_col + 1
+        for i in range(start_row + 1, end_row - 3, 2):
+            for j in range(start_2, end_col + 1, 2):
+                if self.is_wall_occupied(i, j):
+                    continue
+                second_part_x = i + 2
+                third_part_x = i + 1
+                if not start_row <= second_part_x <= end_row:
+                    continue
+                if not start_row <= third_part_x <= end_row:
+                    continue
+                if self.is_wall_occupied(second_part_x, j):
+                    continue
+                if self.is_wall_occupied(third_part_x, j):
+                    continue
+                positions = (i, j, second_part_x, j, third_part_x, j)
+                if include_state:
+                    copy_state = self.copy()
+                    if not copy_state.is_wall_blocking(positions, not self.player_one):
+                        wall_placements.append((copy_state, positions))
+                else:
+                    wall_placements.append(positions)
+        return wall_placements
 
     def place_wall(self, positions):
         for i in range(0, 5, 2):

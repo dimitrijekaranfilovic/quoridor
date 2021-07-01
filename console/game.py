@@ -2,7 +2,6 @@ from console.states.game_state import GameState, Mappings
 from time import time, sleep
 from console.util.wall_direction import WallDirection
 from console.util.color import Color
-import numpy as np
 from console.algorithms.minimax import minimax
 from console.algorithms.minimax_alpha_beta_pruning import minimax_alpha_beta_pruning
 import math
@@ -93,7 +92,7 @@ class Game:
 
                             x_int = Mappings.INPUT_MAPPINGS[x_string.upper()]
                             y_int = Mappings.INPUT_MAPPINGS[y_string.upper()]
-                            is_placement_valid, coords = self.game_state.check_wall_placement(np.array([x_int, y_int]),
+                            is_placement_valid, coords = self.game_state.check_wall_placement((x_int, y_int),
                                                                                               direction)
                             if not is_placement_valid:
                                 Game.print_colored_output("Illegal wall placement!", Color.RED)
