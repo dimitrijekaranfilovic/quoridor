@@ -72,6 +72,14 @@ class GameState:
         game_state.board.extend(self.board)
         return game_state
 
+    def print_game_stats(self):
+        print(Color.GREEN + "{0:<15}".format("Player 1 walls") + Color.WHITE +
+              "|" + Color.RED + "{0:<15}".format(
+            "Player 2 walls") + Color.RESET,
+              end="|\n")
+        print("{0:-<15}|{1:-<15}".format("", ""), end="|\n")
+        print("{0:<15}|{1:<15}|".format(self.player_one_walls_num, self.player_two_wall_num))
+
     def print_board(self):
 
         for i in range(0, len(Mappings.INPUT_LETTERS), 2):
@@ -203,14 +211,6 @@ class GameState:
         for wall_placement in available_wall_placements:
             children.append(wall_placement)
 
-        # if not self.player_one and len(available_wall_placements) > 0:
-        #     print(" ### DOBAVLJAM DJECU ### ")
-        #     print("Prvi igrac na poziciji: ", self.player_one_pos)
-        #     print("Broj mjesta za zidove: ", len(available_wall_placements))
-        #     print("Zidovi: ")
-        #     for wall_placement in available_wall_placements:
-        #         print(wall_placement[1])
-        #     print("==============================\n")
         return children
 
     def get_north_pos(self, include_state=True):
@@ -569,165 +569,8 @@ class GameState:
         self.player_one = player_one
         return not astar(self, True)
 
-    # def get_partly_wall_placements(self, start_row, end_row, include_state, wall_placements):
-    #     if self.player_one and self.player_two_pos[0] < 6:
-    #         return
-    #     elif not self.player_one and self.player_one_pos[0] > 10:
-    #         return
-    #
-    #     # vertical walls
-    #     for i in range(start_row, end_row):
-    #         for j in range(1, self.cols, 2):
-    #
-    #             second_part_x = i + 2
-    #             third_part_x = i + 1
-    #
-    #             if self.is_wall_occupied(i, j):
-    #                 continue
-    #             if self.is_wall_occupied(second_part_x, j):
-    #                 continue
-    #             if self.is_wall_occupied(third_part_x, j):
-    #                 continue
-    #
-    #             positions = (i, j, second_part_x, j, third_part_x, j)
-    #             if include_state:
-    #                 copy_state = self.copy()
-    #                 if not copy_state.is_wall_blocking(positions, not self.player_one):
-    #                     wall_placements.append((copy_state, positions))
-    #             else:
-    #                 wall_placements.append(positions)
-    #
-    #     if start_row == 0:
-    #         start_row += 1
-    #     for i in range(start_row, end_row):
-    #         for j in range(0, self.cols, 2):
-    #             second_part_y = j + 2
-    #             third_part_y = j + 1
-    #
-    #             if self.is_wall_occupied(i, j):
-    #                 continue
-    #             if self.is_wall_occupied(i, second_part_y):
-    #                 continue
-    #             if self.is_wall_occupied(i, third_part_y):
-    #                 continue
-    #
-    #             positions = (i, j, i, second_part_y, i, third_part_y)
-    #             if include_state:
-    #                 copy_state = self.copy()
-    #                 if not copy_state.is_wall_blocking(positions, not self.player_one):
-    #                     wall_placements.append((copy_state, positions))
-    #             else:
-    #                 wall_placements.append(positions)
-
-    def get_partly_wall_placements(self):
-        pass
-
     def get_available_wall_placements(self, include_state=True):
-        # TODO: dodaj pozicioniranje zidova za igraca 1
-        # TODO: popravi pozicioniranje vertikalnih zidova
-        wall_placements = []
-        start_row, end_row, start_col, end_col = 0, 0, 0, 0
-        if self.player_one:
-            if self.player_one_walls_num == 0:
-                return wall_placements
-            elif self.player_two_pos[0] < 8:
-                return wall_placements
-            else:
-                start_row = min(self.player_two_pos[0] + 5, 16)  # mozda +3
-                end_row = max(self.player_two_pos[0] - 4, 0)
-                start_col = max(self.player_two_pos[1] - 5, 0)
-                end_col = min(self.player_two_pos[1] + 6, 16)  # mozda +5
-                # for i in range(self.playe)
-
-        else:
-            if self.player_two_wall_num == 0:
-                return wall_placements
-            elif self.player_one_pos[0] > 10:
-                return wall_placements
-            else:
-                start_row = max(self.player_one_pos[0] - 5, 0)  # mozda -3
-                end_row = min(self.player_one_pos[0] + 2, 16)
-                start_col = max(self.player_one_pos[1] - 5, 0)
-                end_col = min(self.player_one_pos[1] + 6, 16)
-                modifiers = [(0, 1), (1, 0)]
-
-                for k in range(2):  # prvo provjerava horizontalne pa vertikalne zidove
-                    for i in range(start_row + modifiers[k][0], end_row, 2):
-                        for j in range(start_col + modifiers[k][1], end_col, 2):
-                            if self.is_wall_occupied(i, j):
-                                continue
-                            if modifiers[k][0] == 0:  # horizontalni
-                                second_part_x = i
-                                third_part_x = i
-                                second_part_y = j + 2
-                                third_part_y = j + 1
-                            else:  # vertikalni
-                                second_part_x = i + 2
-                                third_part_x = i + 1
-                                second_part_y = j
-                                third_part_y = j
-
-                            if not 0 <= second_part_x <= 16:
-                                continue
-                            if not 0 <= third_part_x <= 16:
-                                continue
-                            if not 0 <= second_part_y <= 16:
-                                continue
-                            if not 0 <= third_part_y <= 16:
-                                continue
-                            if not start_row <= second_part_x <= end_row:
-                                continue
-                            if not start_row <= third_part_x <= end_row:
-                                continue
-                            if not start_col <= second_part_y <= end_col:
-                                continue
-                            if not start_col <= third_part_y <= end_col:
-                                continue
-
-                            if self.is_wall_occupied(second_part_x, second_part_y):
-                                continue
-                            if self.is_wall_occupied(third_part_x, third_part_y):
-                                continue
-                            positions = (i, j, second_part_x, second_part_y, third_part_x, third_part_y)
-                            if include_state:
-                                copy_state = self.copy()
-                                if not copy_state.is_wall_blocking(positions, not self.player_one):
-                                    wall_placements.append((copy_state, positions))
-                            else:
-                                wall_placements.append(positions)
-
-        # param_list = [(0, 4, include_state), (4, 8, include_state), (8, 12, include_state), (12, 14, include_state)]
-        #
-        # with concurrent.futures.ThreadPoolExecutor() as executor:
-        #     futures = [executor.submit(self.get_partly_wall_placements, param) for param in param_list]
-        # for f in futures:
-        #     wall_placements.extend(f.result())
-        # return wall_placements
-        threads = [None] * 4
-        # threads.append(
-        #     threading.Thread(target=self.get_partly_wall_placements, args=(0, 4, include_state, wall_placements)))
-        # threads.append(
-        #     threading.Thread(target=self.get_partly_wall_placements, args=(4, 8, include_state, wall_placements)))
-        # threads.append(
-        #     threading.Thread(target=self.get_partly_wall_placements, args=(8, 12, include_state, wall_placements)))
-        # threads.append(
-        #     threading.Thread(target=self.get_partly_wall_placements, args=(12, 14, include_state, wall_placements)))
-
-        # start = 0
-        # end = 4
-        # for i in range(len(threads)):
-        #     threads[i] = threading.Thread(target=self.get_partly_wall_placements,
-        #                                   args=(start, end, include_state, wall_placements))
-        #     start += 4
-        #     if end != 12:
-        #         end += 4
-        #     else:
-        #         end += 2
-        #     threads[i].start()
-        #
-        # for i in range(len(threads)):
-        #     threads[i].join()
-        return wall_placements
+        return []
 
     def place_wall(self, positions):
         for i in range(0, 5, 2):

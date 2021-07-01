@@ -3,19 +3,18 @@ from time import time, sleep
 from console.util.wall_direction import WallDirection
 from console.util.color import Color
 import numpy as np
-from random import choice, randint
 from console.algorithms.minimax import minimax
 from console.algorithms.minimax_alpha_beta_pruning import minimax_alpha_beta_pruning
 import math
 
 
 class Game:
+    # TODO: dodati da se bira je li simulacija ili ne, kao i biranje algoritama za simulaciju
     def __init__(self):
         self.player_one_simulation_algorithm = 0
         self.player_two_simulation_algorithm = 0
         self.algorithms = ["minimax"]
         self.game_state = GameState({"algorithms": ["minimax"]})
-        # self.player_one_turn = True
         self.agents = {"minimax": self.minimax_agent}
 
     def minimax_agent(self, player_one_minimax):
@@ -46,7 +45,6 @@ class Game:
         k = max(d)
         winner = d[k]
         action = winner[1]
-
         if len(action) == 2:
             self.game_state.move_piece(action)
         else:
@@ -55,8 +53,7 @@ class Game:
 
     def player_one_user(self):
         while True:
-            value = input("Current number of walls: {0:<2}\nEnter move[Mx,y or WxV | WxH]: ".format(
-                self.game_state.player_one_walls_num))
+            value = input("Enter move[Mx,y or WxV | WxH]: ")
             if value == "x" or value == "X":
                 exit(0)
             else:
@@ -82,7 +79,6 @@ class Game:
                         Game.print_colored_output("Illegal wall placement!", Color.RED)
                     else:
                         dir_string = value[-1]
-                        direction = WallDirection.NORTH
                         if dir_string in ["N", "S", "E", "W"]:
 
                             if dir_string == "S":
@@ -150,15 +146,16 @@ class Game:
                 else:
                     self.print_colored_output("You lost!", Color.RED)
             else:
-                self.print_colored_output("The winner is " + winner, Color.CYAN)
+                self.print_colored_output("The winner is " + winner + ".", Color.CYAN)
             return True
         else:
             return False
 
     def play(self):
         Game.print_colored_output("### QUORIDOR ###\n\n", Color.CYAN)
-        # print_rules()
         while True:
+            print()
+            self.game_state.print_game_stats()
             print()
             self.game_state.print_board()
             print()
@@ -176,11 +173,9 @@ class Game:
                         break
             else:
                 res = self.player_two_simulation()
-                sleep(1.5)
                 if not res:
                     break
 
-            # self.player_one_turn = not self.player_one_turn
             self.game_state.player_one = not self.game_state.player_one
 
     @staticmethod
