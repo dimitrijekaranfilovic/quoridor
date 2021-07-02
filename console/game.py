@@ -14,6 +14,7 @@ class Game:
         self.player_one_simulation_algorithm = 0
         self.player_two_simulation_algorithm = "minimax"
         self.game_state = GameState()
+        self.algorithms = ["minimax", "minimax-alpha-beta-pruning"]
 
         self.initialize()
 
@@ -30,34 +31,52 @@ class Game:
         print("\n")
         print("First the commands [they are case insensitive]: ")
         self.print_commands()
+        print("{0:-<100}".format(""))
 
         # TODO: dodati ovdje da bira oce li simulaciju
-        self.game_state.is_simulation = False
+        a = input("\nDo you want to play against a computer?[Y/n]: ")
+        if a == "Y" or a == "y":
+            self.game_state.is_simulation = False
 
-        print("{0:-<100}".format(""))
-        print("Choose the second player algorithm: ")
-        print("1. minimax")
-        print("2. minimax with alpha beta pruning")
-        # TODO: dodati i ostala 2
-        while True:
-            x = input("Choose: ")
-            if not x.isdigit() and x != "x" and x != "X":
-                Game.print_colored_output("Illegal input!", Color.RED)
-            elif x == "x" or x == "X":
-                exit(0)
-            else:
-                if int(x) == 1:
-                    self.player_two_simulation_algorithm = "minimax"
-                    break
-                elif int(x) == 2:
-                    self.player_two_simulation_algorithm = "minimax-alpha-beta-pruning"
-                    break
-                else:
+            print("Choose the second player algorithm: ")
+            print("1. minimax")
+            print("2. minimax with alpha beta pruning")
+            # TODO: dodati i ostala 2
+            while True:
+                x = input("Choose: ")
+                if not x.isdigit() and x != "x" and x != "X":
                     Game.print_colored_output("Illegal input!", Color.RED)
+                elif x == "x" or x == "X":
+                    exit(0)
+                else:
+                    if 0 <= int(x) - 1 < len(self.algorithms):
+                        self.player_two_simulation_algorithm = self.algorithms[int(x) - 1]
+                        break
+                    else:
+                        Game.print_colored_output("Illegal input!", Color.RED)
+        else:
+            self.game_state.is_simulation = True
+            print("Choose the players algorithms[first_player, second_player]")
+            print("1. minimax")
+            print("2. minimax with alpha beta pruning")
+            while True:
+                x = input("Choose: ")
+                if not len(x.split(",")) == 2 and x != "x" and x != "X":
+                    Game.print_colored_output("Illegal input!", Color.RED)
+                elif x == "x" or x == "X":
+                    exit(0)
+                else:
+                    one, two = x.split(",")
+                    if 0 <= int(one) - 1 < len(self.algorithms) and 0 <= int(two) - 1 < len(self.algorithms):
+                        self.player_one_simulation_algorithm = self.algorithms[int(one) - 1]
+                        self.player_two_simulation_algorithm = self.algorithms[int(two) - 1]
+                        break
+                    else:
+                        Game.print_colored_output("Illegal input!", Color.RED)
 
     def minimax_agent(self, player_one_minimax, is_alpha_beta):
         d = {}
-        for child in self.game_state.get_all_child_states():
+        for child in self.game_state.get_all_child_states(player_one_minimax):
             if not is_alpha_beta:
                 value = minimax(child[0], 3, maximizing_player=False, player_one_minimax=player_one_minimax)
             else:
