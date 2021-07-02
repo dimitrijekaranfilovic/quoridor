@@ -55,10 +55,14 @@ class Game:
                 else:
                     Game.print_colored_output("Illegal input!", Color.RED)
 
-    def minimax_agent(self, player_one_minimax):
+    def minimax_agent(self, player_one_minimax, is_alpha_beta):
         d = {}
         for child in self.game_state.get_all_child_states():
-            value = minimax(child[0], 3, maximizing_player=False, player_one_minimax=player_one_minimax)
+            if not is_alpha_beta:
+                value = minimax(child[0], 3, maximizing_player=False, player_one_minimax=player_one_minimax)
+            else:
+                value = minimax_alpha_beta_pruning(child[0], 3, -math.inf, math.inf, maximizing_player=False,
+                                                   player_one_minimax=player_one_minimax)
             d[value] = child
         if len(d.keys()) == 0:
             return None
@@ -66,24 +70,6 @@ class Game:
         winner = d[k]
         action = winner[1]
 
-        if len(action) == 2:
-            self.game_state.move_piece(action)
-        else:
-            self.game_state.place_wall(action)
-        return action
-
-    def minimax_alpha_beta_agent(self, player_one_minimax):
-        d = {}
-        children = self.game_state.get_all_child_states()
-        for child in children:
-            value = minimax_alpha_beta_pruning(child[0], 3, -math.inf, math.inf, maximizing_player=False,
-                                               player_one_minimax=player_one_minimax)
-            d[value] = child
-        if len(d.keys()) == 0:
-            return None
-        k = max(d)
-        winner = d[k]
-        action = winner[1]
         if len(action) == 2:
             self.game_state.move_piece(action)
         else:
@@ -149,7 +135,7 @@ class Game:
     def player_one_simulation(self):
         t1 = time()
         print("Player 1 is thinking...\n")
-        action = self.minimax_alpha_beta_agent(True)
+        action = self.minimax_agent(player_one_minimax=True, is_alpha_beta=True)
         if action is not None:
             if len(action) == 2:
                 self.print_colored_output("Player 1 has moved his piece.", Color.CYAN)
@@ -167,9 +153,9 @@ class Game:
         print("Player 2 is thinking...\n")
         action = (0, 0)
         if self.player_two_simulation_algorithm == "minimax":
-            action = self.minimax_agent(False)
+            action = self.minimax_agent(False, is_alpha_beta=False)
         elif self.player_two_simulation_algorithm == "minimax-alpha-beta-pruning":
-            action = self.minimax_alpha_beta_agent(False)
+            action = self.minimax_agent(False, is_alpha_beta=True)
         if action is not None:
             if len(action) == 2:
                 self.print_colored_output("Player 2 has moved his piece.", Color.CYAN)
