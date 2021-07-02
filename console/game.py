@@ -10,11 +10,50 @@ import math
 class Game:
     # TODO: dodati da se bira je li simulacija ili ne, kao i biranje algoritama za simulaciju
     def __init__(self):
+
         self.player_one_simulation_algorithm = 0
-        self.player_two_simulation_algorithm = 0
-        self.algorithms = ["minimax"]
-        self.game_state = GameState({"algorithms": ["minimax"]})
-        self.agents = {"minimax": self.minimax_agent}
+        self.player_two_simulation_algorithm = "minimax"
+        self.game_state = GameState()
+
+        self.initialize()
+
+    def print_commands(self):
+        print(
+            "1. You can move your piece by entering" + Color.CYAN + " mx,y " + Color.RESET + "where x is the row letter and y column letter")
+        print(
+            "2. You can place a wall by entering" + Color.CYAN + " wx,yd " + Color.RESET + "where d represents the wall direction and")
+        print("it can be one of [S, N, E, W]. They represent the south, north, east and west orientations.")
+        print("3. When it's your turn, you can also press " + Color.CYAN + " x " + Color.RESET + " to exit the game.")
+
+    def initialize(self):
+        Game.print_colored_output("### WELCOME TO QUORIDOR ###", Color.CYAN)
+        print("\n")
+        print("First the commands [they are case insensitive]: ")
+        self.print_commands()
+
+        # TODO: dodati ovdje da bira oce li simulaciju
+        self.game_state.is_simulation = False
+
+        print("{0:-<100}".format(""))
+        print("Choose the second player algorithm: ")
+        print("1. minimax")
+        print("2. minimax with alpha beta pruning")
+        # TODO: dodati i ostala 2
+        while True:
+            x = input("Choose: ")
+            if not x.isdigit() and x != "x" and x != "X":
+                Game.print_colored_output("Illegal input!", Color.RED)
+            elif x == "x" or x == "X":
+                exit(0)
+            else:
+                if int(x) == 1:
+                    self.player_two_simulation_algorithm = "minimax"
+                    break
+                elif int(x) == 2:
+                    self.player_two_simulation_algorithm = "minimax-alpha-beta-pruning"
+                    break
+                else:
+                    Game.print_colored_output("Illegal input!", Color.RED)
 
     def minimax_agent(self, player_one_minimax):
         d = {}
@@ -53,9 +92,13 @@ class Game:
 
     def player_one_user(self):
         while True:
-            value = input("Enter move[Mx,y or WxV | WxH]: ")
+            value = input("Enter move: ")
             if value == "x" or value == "X":
                 exit(0)
+            elif value.lower() == "help":
+                print()
+                self.print_commands()
+                print()
             else:
                 if value.upper().startswith("M"):
                     x_string, y_string = value[1:].split(",")
@@ -79,13 +122,13 @@ class Game:
                         Game.print_colored_output("Illegal wall placement!", Color.RED)
                     else:
                         dir_string = value[-1]
-                        if dir_string in ["N", "S", "E", "W"]:
+                        if dir_string.upper() in ["N", "S", "E", "W"]:
 
-                            if dir_string == "S":
+                            if dir_string.upper() == "S":
                                 direction = WallDirection.SOUTH
-                            elif dir_string == "E":
+                            elif dir_string.upper() == "E":
                                 direction = WallDirection.EAST
-                            elif dir_string == "W":
+                            elif dir_string.upper() == "W":
                                 direction = WallDirection.WEST
                             else:
                                 direction = WallDirection.NORTH
@@ -106,7 +149,6 @@ class Game:
     def player_one_simulation(self):
         t1 = time()
         print("Player 1 is thinking...\n")
-        # action = self.agents[self.algorithms[self.player_two_simulation_algorithm]]()
         action = self.minimax_alpha_beta_agent(True)
         if action is not None:
             if len(action) == 2:
@@ -123,8 +165,11 @@ class Game:
     def player_two_simulation(self):
         t1 = time()
         print("Player 2 is thinking...\n")
-        # action = self.agents[self.algorithms[self.player_two_simulation_algorithm]]()
-        action = self.minimax_alpha_beta_agent(False)
+        action = (0, 0)
+        if self.player_two_simulation_algorithm == "minimax":
+            action = self.minimax_agent(False)
+        elif self.player_two_simulation_algorithm == "minimax-alpha-beta-pruning":
+            action = self.minimax_alpha_beta_agent(False)
         if action is not None:
             if len(action) == 2:
                 self.print_colored_output("Player 2 has moved his piece.", Color.CYAN)

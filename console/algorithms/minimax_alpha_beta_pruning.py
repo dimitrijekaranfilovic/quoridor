@@ -16,7 +16,6 @@ def minimax_alpha_beta_pruning(game_state: GameState, depth, alpha, beta, maximi
             alpha = max(alpha, ev)
             if beta <= alpha:
                 break
-        game_state.value = max_eval
         return max_eval
     else:
         min_eval = math.inf

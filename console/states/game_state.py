@@ -26,17 +26,14 @@ class Mappings:
 
 
 class GameState:
-    def __init__(self, config, initialize=True):
+    def __init__(self, is_simulation=False, initialize=True):
         """
         Config is a dictionary with the following keys:
             algorithms: array of algorithms used to calculate players' moves
         :param config:
         """
         # TODO: stavi 1D niz da bude tabla, pa radi shallow copy
-        GameState.check_config(config)
-        self.config = config
-        self.is_simulation = len(config["algorithms"]) == 2
-
+        self.is_simulation = is_simulation
         self.player_one = True
         self.rows = 17
         self.cols = 17
@@ -132,15 +129,6 @@ class GameState:
                             print(Color.YELLOW + "O" + Color.RESET, end="")
             print()
 
-    @staticmethod
-    def check_config(config):
-        if "algorithms" not in config.keys():
-            raise InvalidConfigException("Config does not contain key 'algorithms'!")
-        elif not isinstance(config["algorithms"], list):
-            raise InvalidConfigException("Value for 'algorithms' key in config is not a list!")
-        elif len(config["algorithms"]) != 1 and len(config["algorithms"]) != 2:
-            raise InvalidConfigException("Invalid number of items in 'algorithms' in config!")
-
     def is_piece_occupied(self, i, j):
         index = i * self.cols + j
         return self.board[index] == BoardPieceStatus.OCCUPIED_BY_PLAYER_1 or self.board[
@@ -207,9 +195,9 @@ class GameState:
             children.append(move)
         # TODO: bug when calling the get_available_wall_placements function
 
-        available_wall_placements = []
-        if not self.player_one:
-            available_wall_placements = self.get_available_wall_placements_for_player_two(True)
+        # available_wall_placements = []
+        # if not self.player_one:
+        available_wall_placements = self.get_available_wall_placements_for_player_two(True)
         for wall_placement in available_wall_placements:
             children.append(wall_placement)
 
@@ -575,8 +563,8 @@ class GameState:
     def get_available_wall_placements_for_player_two(self, include_state=True):
         wall_placements = []
 
-        # TODO: testiraj dodatno
-        # TODO: dodaj generisanje zidova za player_one
+        if not self.is_simulation and self.player_one:
+            return wall_placements
 
         start_row = max(self.player_one_pos[0] - 3, 0)
         end_row = min(self.player_one_pos[0] + 2, 16)
