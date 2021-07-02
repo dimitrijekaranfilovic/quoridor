@@ -516,7 +516,7 @@ class GameState:
                 third_piece_x = starting_pos[0] + 1
                 third_piece_y = starting_pos[1]
         elif direction == WallDirection.EAST:
-            if starting_pos[1] % 2 == 1:
+            if starting_pos[0] % 2 == 0:
                 return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
             else:
                 second_piece_x = starting_pos[0]
@@ -525,7 +525,7 @@ class GameState:
                 third_piece_y = starting_pos[1] + 1
 
         else:  # WallDirection.WEST
-            if starting_pos[1] % 2 == 1:
+            if starting_pos[0] % 2 == 0:
                 return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
             else:
                 second_piece_x = starting_pos[0]
@@ -550,7 +550,7 @@ class GameState:
         copy_state = copy(self)
 
         if copy_state.is_wall_blocking(positions, not self.player_one):
-            print("BLOKIRA SRANJE!")
+            # print("BLOKIRA SRANJE!")
             return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
 
         return True, positions
@@ -564,6 +564,10 @@ class GameState:
         wall_placements = []
 
         if not self.is_simulation and self.player_one:
+            return wall_placements
+        if not self.player_one and self.player_two_wall_num == 0:
+            return wall_placements
+        if self.player_one and self.player_one_walls_num == 0:
             return wall_placements
 
         start_row = max(self.player_one_pos[0] - 3, 0)
