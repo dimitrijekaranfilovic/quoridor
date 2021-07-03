@@ -4,17 +4,16 @@ from console.util.wall_direction import WallDirection
 from console.util.color import Color
 from console.algorithms.minimax import minimax
 from console.algorithms.minimax_alpha_beta_pruning import minimax_alpha_beta_pruning
+from console.algorithms.expectimax import expectimax
 import math
 
 
 class Game:
-    # TODO: dodati da se bira je li simulacija ili ne, kao i biranje algoritama za simulaciju
     def __init__(self):
 
-        self.player_one_simulation_algorithm = 0
-        self.player_two_simulation_algorithm = "minimax"
+        self.player_simulation_algorithms = ["minimax", "minimax"]
         self.game_state = GameState()
-        self.algorithms = ["minimax", "minimax-alpha-beta-pruning"]
+        self.algorithms = ["minimax", "minimax-alpha-beta-pruning", "expectimax"]
 
         self.initialize()
 
@@ -33,7 +32,6 @@ class Game:
         self.print_commands()
         print("{0:-<100}".format(""))
 
-        # TODO: dodati ovdje da bira oce li simulaciju
         a = input("\nDo you want to play against a computer?[Y/n]: ")
         if a == "Y" or a == "y":
             self.game_state.is_simulation = False
@@ -41,7 +39,7 @@ class Game:
             print("Choose the second player algorithm: ")
             print("1. minimax")
             print("2. minimax with alpha beta pruning")
-            # TODO: dodati i ostala 2
+            print("3. expectimax")
             while True:
                 x = input("Choose: ")
                 if not x.isdigit() and x != "x" and x != "X":
@@ -50,7 +48,10 @@ class Game:
                     exit(0)
                 else:
                     if 0 <= int(x) - 1 < len(self.algorithms):
-                        self.player_two_simulation_algorithm = self.algorithms[int(x) - 1]
+                        # self.player_two_simulation_algorithm = self.algorithms[int(x) - 1]
+                        self.player_simulation_algorithms[1] = self.algorithms[int(x) - 1]
+                        Game.print_colored_output("Chosen algorithm for player 2 is {0:30}".format(
+                            self.player_simulation_algorithms[1].upper()), Color.CYAN)
                         break
                     else:
                         Game.print_colored_output("Illegal input!", Color.RED)
@@ -59,6 +60,7 @@ class Game:
             print("Choose the players algorithms[first_player, second_player]")
             print("1. minimax")
             print("2. minimax with alpha beta pruning")
+            print("3. expectimax")
             while True:
                 x = input("Choose: ")
                 if not len(x.split(",")) == 2 and x != "x" and x != "X":
@@ -68,21 +70,17 @@ class Game:
                 else:
                     one, two = x.split(",")
                     if 0 <= int(one) - 1 < len(self.algorithms) and 0 <= int(two) - 1 < len(self.algorithms):
-                        self.player_one_simulation_algorithm = self.algorithms[int(one) - 1]
-                        self.player_two_simulation_algorithm = self.algorithms[int(two) - 1]
+                        self.player_simulation_algorithms[0] = self.algorithms[int(one) - 1]
+                        self.player_simulation_algorithms[1] = self.algorithms[int(two) - 1]
+                        Game.print_colored_output("Chosen algorithm for player 1 is {0:30}".format(
+                            self.player_simulation_algorithms[0].upper()), Color.CYAN)
+                        Game.print_colored_output("Chosen algorithm for player 2 is {0:30}".format(
+                            self.player_simulation_algorithms[1].upper()), Color.CYAN)
                         break
                     else:
                         Game.print_colored_output("Illegal input!", Color.RED)
 
-    def minimax_agent(self, player_one_minimax, is_alpha_beta):
-        d = {}
-        for child in self.game_state.get_all_child_states(player_one_minimax):
-            if not is_alpha_beta:
-                value = minimax(child[0], 3, maximizing_player=False, player_one_minimax=player_one_minimax)
-            else:
-                value = minimax_alpha_beta_pruning(child[0], 3, -math.inf, math.inf, maximizing_player=False,
-                                                   player_one_minimax=player_one_minimax)
-            d[value] = child
+    def choose_action(self, d):
         if len(d.keys()) == 0:
             return None
         k = max(d)
@@ -94,6 +92,24 @@ class Game:
         else:
             self.game_state.place_wall(action)
         return action
+
+    def minimax_agent(self, player_one_minimax, is_alpha_beta):
+        d = {}
+        for child in self.game_state.get_all_child_states(player_one_minimax):
+            if not is_alpha_beta:
+                value = minimax(child[0], 3, maximizing_player=False, player_one_minimax=player_one_minimax)
+            else:
+                value = minimax_alpha_beta_pruning(child[0], 3, -math.inf, math.inf, maximizing_player=False,
+                                                   player_one_minimax=player_one_minimax)
+            d[value] = child
+        return self.choose_action(d)
+
+    def expectimax_agent(self, player_one_maximizer):
+        d = {}
+        for child in self.game_state.get_all_child_states(player_one_maximizer):
+            value = expectimax(child[0], 2, False, player_one_maximizer)
+            d[value] = child
+        return self.choose_action(d)
 
     def player_one_user(self):
         while True:
@@ -151,40 +167,32 @@ class Game:
                 else:
                     Game.print_colored_output("Illegal command!", Color.RED)
 
-    def player_one_simulation(self):
-        t1 = time()
-        print("Player 1 is thinking...\n")
-        action = self.minimax_agent(player_one_minimax=True, is_alpha_beta=True)
-        if action is not None:
-            if len(action) == 2:
-                self.print_colored_output("Player 1 has moved his piece.", Color.CYAN)
-            else:
-                self.print_colored_output("Player 1 has placed a wall.", Color.CYAN)
-            t2 = time()
-            self.print_colored_output("It took him " + str(round(t2 - t1, 2)) + " seconds.", Color.CYAN)
-            return True
+    def player_simulation(self, player_number):
+        if player_number == 1:
+            index = 0
+            maximizer = True
         else:
-            self.print_colored_output("Player 1 has no moves left.", Color.CYAN)
-            return False
-
-    def player_two_simulation(self):
+            index = 1
+            maximizer = False
         t1 = time()
-        print("Player 2 is thinking...\n")
+        print("Player {0:1} is thinking...\n".format(player_number))
         action = (0, 0)
-        if self.player_two_simulation_algorithm == "minimax":
-            action = self.minimax_agent(False, is_alpha_beta=False)
-        elif self.player_two_simulation_algorithm == "minimax-alpha-beta-pruning":
-            action = self.minimax_agent(False, is_alpha_beta=True)
+        if self.player_simulation_algorithms[index] == "minimax":
+            action = self.minimax_agent(maximizer, is_alpha_beta=False)
+        elif self.player_simulation_algorithms[index] == "minimax-alpha-beta-pruning":
+            action = self.minimax_agent(maximizer, is_alpha_beta=True)
+        elif self.player_simulation_algorithms[index] == "expectimax":
+            action = self.expectimax_agent(maximizer)
         if action is not None:
             if len(action) == 2:
-                self.print_colored_output("Player 2 has moved his piece.", Color.CYAN)
+                self.print_colored_output("Player {0:1} has moved his piece.".format(player_number), Color.CYAN)
             else:
-                self.print_colored_output("Player 2 has placed a wall.", Color.CYAN)
+                self.print_colored_output("Player {0:1} has placed a wall.".format(player_number), Color.CYAN)
             t2 = time()
             self.print_colored_output("It took him " + str(round(t2 - t1, 2)) + " seconds.", Color.CYAN)
             return True
         else:
-            self.print_colored_output("Player 2 has no moves left.", Color.CYAN)
+            self.print_colored_output("Player {0:1} has no moves left.".format(player_number), Color.CYAN)
             return False
 
     def check_end_state(self):
@@ -202,11 +210,10 @@ class Game:
             return False
 
     def play(self):
-        Game.print_colored_output("### QUORIDOR ###\n\n", Color.CYAN)
         while True:
             print()
             self.game_state.print_game_stats()
-            print()
+            print("\n")
             self.game_state.print_board()
             print()
 
@@ -217,12 +224,12 @@ class Game:
                 if not self.game_state.is_simulation:
                     self.player_one_user()
                 else:
-                    res = self.player_one_simulation()
+                    res = self.player_simulation(1)
                     sleep(1.5)
                     if not res:
                         break
             else:
-                res = self.player_two_simulation()
+                res = self.player_simulation(2)
                 if not res:
                     break
 
