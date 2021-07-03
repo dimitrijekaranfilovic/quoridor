@@ -10,7 +10,7 @@ def minimax_alpha_beta_pruning(game_state: GameState, depth, alpha, beta, maximi
         return state_evaluation_heuristic(game_state, player_one_minimax)
     if maximizing_player:
         max_eval = -math.inf
-        for child in game_state.get_all_child_states():
+        for child in game_state.get_all_child_states(player_one_minimax):
             ev = minimax_alpha_beta_pruning(child[0], depth - 1, alpha, beta, False, player_one_minimax)
             max_eval = max(max_eval, ev)
             alpha = max(alpha, ev)
@@ -19,7 +19,7 @@ def minimax_alpha_beta_pruning(game_state: GameState, depth, alpha, beta, maximi
         return max_eval
     else:
         min_eval = math.inf
-        for child in game_state.get_all_child_states():
+        for child in game_state.get_all_child_states(player_one_minimax):
             ev = minimax_alpha_beta_pruning(child[0], depth - 1, alpha, beta, True, player_one_minimax)
             min_eval = min(min_eval, ev)
             beta = min(beta, ev)

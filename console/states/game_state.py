@@ -1,11 +1,9 @@
 from console.util.wall_direction import WallDirection
-from exceptions.invalid_config_exception import InvalidConfigException
 import numpy as np
 from copy import copy
 from console.search.astar import astar
 from console.util.color import Color
 import threading
-import concurrent.futures
 
 
 class BoardPieceStatus:
@@ -187,7 +185,7 @@ class GameState:
             children.append((child, simplified_child_state))
         return children
 
-    def get_all_child_states(self):
+    def get_all_child_states(self, player_one_maximizer):
 
         children = []
         available_moves = self.get_available_moves()
@@ -195,9 +193,11 @@ class GameState:
             children.append(move)
         # TODO: bug when calling the get_available_wall_placements function
 
-        # available_wall_placements = []
-        # if not self.player_one:
-        available_wall_placements = self.get_available_wall_placements_for_player_two(True)
+        available_wall_placements = []
+        if not self.player_one and not player_one_maximizer:
+            available_wall_placements = self.get_available_wall_placements_for_player_two(True)
+        if self.player_one and player_one_maximizer:
+            available_wall_placements = self.get_available_wall_placements_for_player_one(True)
         for wall_placement in available_wall_placements:
             children.append(wall_placement)
 
@@ -550,7 +550,6 @@ class GameState:
         copy_state = copy(self)
 
         if copy_state.is_wall_blocking(positions, not self.player_one):
-            # print("BLOKIRA SRANJE!")
             return False, np.array([starting_pos[0], starting_pos[1], -1, -1, -1, -1])
 
         return True, positions
@@ -560,14 +559,84 @@ class GameState:
         self.player_one = player_one
         return not astar(self, True)
 
+    def get_available_wall_placements_for_player_one(self, include_state=True):
+        wall_placements = []
+
+        if self.player_one_walls_num == 0:
+            return wall_placements
+
+        start_row = max(self.player_two_pos[0] - 2, 0)
+        end_row = min(self.player_two_pos[0] + 3, 16)
+        start_col = max(self.player_one_pos[1] - 3, 0)
+        end_col = min(self.player_one_pos[1] + 3, 16)
+
+        # horizontal
+        end = end_col - 3
+        if end_col == 16:
+            end = end_col + 1
+        start_1 = start_col + 1
+        if start_col == 0:
+            start_1 = start_col
+            end = end_col - 2
+        for i in range(start_row + 1, end_row, 2):
+            for j in range(start_1, end, 2):
+                if self.is_wall_occupied(i, j):
+                    continue
+                second_part_y = j + 2
+                third_part_y = j + 1
+                if not start_col <= second_part_y <= end_col:
+                    continue
+                if not start_col <= third_part_y <= end_col:
+                    continue
+                if self.is_wall_occupied(i, second_part_y):
+                    continue
+                if self.is_wall_occupied(i, third_part_y):
+                    continue
+                positions = (i, j, i, second_part_y, i, third_part_y)
+                if include_state:
+                    copy_state = self.copy()
+                    if not copy_state.is_wall_blocking(positions, not self.player_one):
+                        wall_placements.append((copy_state, positions))
+                else:
+                    wall_placements.append(positions)
+        # vertical
+        start_2 = start_col
+        if start_2 == 0:
+            start_2 = start_col + 1
+        for i in range(start_row, end_row - 3, 2):
+            for j in range(start_2, end_col + 1, 2):
+                if self.is_wall_occupied(i, j):
+                    continue
+                second_part_x = i + 2
+                third_part_x = i + 1
+                if not start_row <= second_part_x <= end_row:
+                    continue
+                if not start_row <= third_part_x <= end_row:
+                    continue
+                if self.is_wall_occupied(second_part_x, j):
+                    continue
+                if self.is_wall_occupied(third_part_x, j):
+                    continue
+                positions = (i, j, second_part_x, j, third_part_x, j)
+                if include_state:
+                    copy_state = self.copy()
+                    if not copy_state.is_wall_blocking(positions, not self.player_one):
+                        wall_placements.append((copy_state, positions))
+                else:
+                    wall_placements.append(positions)
+
+        return wall_placements
+
     def get_available_wall_placements_for_player_two(self, include_state=True):
         wall_placements = []
 
-        if not self.is_simulation and self.player_one:
-            return wall_placements
-        if not self.player_one and self.player_two_wall_num == 0:
-            return wall_placements
-        if self.player_one and self.player_one_walls_num == 0:
+        # if not self.is_simulation and self.player_one:
+        #     return wall_placements
+        # if not self.player_one and self.player_two_wall_num == 0:
+        #     return wall_placements
+        # if self.player_one and self.player_one_walls_num == 0:
+        #     return wall_placements
+        if self.player_two_wall_num == 0:
             return wall_placements
 
         start_row = max(self.player_one_pos[0] - 3, 0)
