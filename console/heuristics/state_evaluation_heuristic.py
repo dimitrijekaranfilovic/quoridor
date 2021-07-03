@@ -2,7 +2,7 @@ from console.states.game_state import *
 from console.search.astar import astar
 
 
-def state_evaluation_heuristic(game_state: GameState, player_one_maximizer):
+def state_evaluation_heuristic(game_state: GameState, player_one_maximizer, is_expectimax):
     player_one_distance = game_state.player_one_pos[0] // 2
     player_two_distance = (16 - game_state.player_two_pos[0]) // 2
     result = 0
@@ -47,7 +47,10 @@ def state_evaluation_heuristic(game_state: GameState, player_one_maximizer):
             player_path_len = astar(game_state, False)
             game_state.player_one = previous
 
-        result += opponent_path_len
+        if not is_expectimax:
+            result += opponent_path_len
+        else:
+            result += 17 * opponent_path_len
         result -= player_two_distance
         num = 100
         if player_path_len != 0:

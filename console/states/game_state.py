@@ -31,7 +31,6 @@ class GameState:
             algorithms: array of algorithms used to calculate players' moves
         :param config:
         """
-        # TODO: stavi 1D niz da bude tabla, pa radi shallow copy
         self.is_simulation = is_simulation
         self.player_one = True
         self.rows = 17
@@ -46,8 +45,6 @@ class GameState:
 
             self.board = np.zeros((289,), dtype=int)
             self.set_up_board()
-
-    # TODO: mozda stavi da imas kolekciju slobodnih mjesta za zidove, pa kad se koji zid stavi da se iz te kolekcije mice
 
     def set_up_board(self):
         for i in range(self.rows):
@@ -192,7 +189,6 @@ class GameState:
         available_moves = self.get_available_moves()
         for move in available_moves:
             children.append(move)
-        # TODO: bug when calling the get_available_wall_placements function
 
         available_wall_placements = []
         if not self.player_one and not player_one_maximizer:
@@ -631,14 +627,10 @@ class GameState:
     def get_available_wall_placements_for_player_two(self, include_state=True):
         wall_placements = []
 
-        # if not self.is_simulation and self.player_one:
-        #     return wall_placements
-        # if not self.player_one and self.player_two_wall_num == 0:
-        #     return wall_placements
-        # if self.player_one and self.player_one_walls_num == 0:
-        #     return wall_placements
         if self.player_two_wall_num == 0:
             return wall_placements
+
+        # TODO: vidi za vertikalne zidove
 
         start_row = max(self.player_one_pos[0] - 3, 0)
         end_row = min(self.player_one_pos[0] + 2, 16)
@@ -678,7 +670,10 @@ class GameState:
         start_2 = start_col
         if start_2 == 0:
             start_2 = start_col + 1
-        for i in range(start_row + 1, end_row - 3, 2):
+        start_3 = start_row + 1
+        if start_row == 0:
+            start_3 = 0
+        for i in range(start_3, end_row - 3, 2):
             for j in range(start_2, end_col + 1, 2):
                 if self.is_wall_occupied(i, j):
                     continue

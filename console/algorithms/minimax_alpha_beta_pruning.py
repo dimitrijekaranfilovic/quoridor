@@ -7,7 +7,7 @@ def minimax_alpha_beta_pruning(game_state: GameState, depth, alpha, beta, maximi
     if depth == 0:
         # add real heuristic
         # return game_state.player_one_walls_num + game_state.player_two_wall_num
-        return state_evaluation_heuristic(game_state, player_one_minimax)
+        return state_evaluation_heuristic(game_state, player_one_minimax, False)
     if maximizing_player:
         max_eval = -math.inf
         for child in game_state.get_all_child_states(player_one_minimax):
