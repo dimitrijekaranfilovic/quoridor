@@ -14,6 +14,7 @@ class Game:
         self.player_simulation_algorithms = ["minimax", "minimax"]
         self.game_state = GameState()
         self.algorithms = ["minimax", "minimax-alpha-beta-pruning", "expectimax"]
+        self.execution_times = []
 
         self.initialize()
 
@@ -189,6 +190,7 @@ class Game:
             else:
                 self.print_colored_output("Player {0:1} has placed a wall.".format(player_number), Color.CYAN)
             t2 = time()
+            self.execution_times.append(t2 - t1)
             self.print_colored_output("It took him " + str(round(t2 - t1, 2)) + " seconds.", Color.CYAN)
             return True
         else:
@@ -218,6 +220,7 @@ class Game:
             print()
 
             if self.check_end_state():
+                print("Execution average: ", sum(self.execution_times) / len(self.execution_times))
                 break
 
             if self.game_state.player_one:

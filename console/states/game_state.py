@@ -6,6 +6,7 @@ from console.util.color import Color
 import threading
 
 
+# TODO: makni numpy
 class BoardPieceStatus:
     OCCUPIED_BY_PLAYER_1 = 1
     OCCUPIED_BY_PLAYER_2 = 2
