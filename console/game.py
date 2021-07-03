@@ -5,6 +5,7 @@ from console.util.color import Color
 from console.algorithms.minimax import minimax
 from console.algorithms.minimax_alpha_beta_pruning import minimax_alpha_beta_pruning
 from console.algorithms.expectimax import expectimax
+from console.algorithms.monte_carlo_tree_search import SearchNode
 import math
 
 
@@ -13,7 +14,7 @@ class Game:
 
         self.player_simulation_algorithms = ["minimax", "minimax"]
         self.game_state = GameState()
-        self.algorithms = ["minimax", "minimax-alpha-beta-pruning", "expectimax"]
+        self.algorithms = ["minimax", "minimax-alpha-beta-pruning", "expectimax", "monte-carlo-tree-search"]
         self.execution_times = []
 
         self.initialize()
@@ -41,6 +42,7 @@ class Game:
             print("1. minimax")
             print("2. minimax with alpha beta pruning")
             print("3. expectimax")
+            print("4. monte carlo tree search")
             while True:
                 x = input("Choose: ")
                 if not x.isdigit() and x != "x" and x != "X":
@@ -49,7 +51,6 @@ class Game:
                     exit(0)
                 else:
                     if 0 <= int(x) - 1 < len(self.algorithms):
-                        # self.player_two_simulation_algorithm = self.algorithms[int(x) - 1]
                         self.player_simulation_algorithms[1] = self.algorithms[int(x) - 1]
                         Game.print_colored_output("Chosen algorithm for player 2 is {0:30}".format(
                             self.player_simulation_algorithms[1].upper()), Color.CYAN)
@@ -62,6 +63,7 @@ class Game:
             print("1. minimax")
             print("2. minimax with alpha beta pruning")
             print("3. expectimax")
+            print("4. monte carlo tree search")
             while True:
                 x = input("Choose: ")
                 if not len(x.split(",")) == 2 and x != "x" and x != "X":
@@ -184,6 +186,12 @@ class Game:
             action = self.minimax_agent(maximizer, is_alpha_beta=True)
         elif self.player_simulation_algorithms[index] == "expectimax":
             action = self.expectimax_agent(maximizer)
+        elif self.player_simulation_algorithms[index] == "monte-carlo-tree-search":
+            start = SearchNode(state=self.game_state, player_one_maximizer=maximizer)
+            selected_node = start.best_action()
+            action = selected_node.parent_action
+            self.game_state.execute_action(action, False)
+
         if action is not None:
             if len(action) == 2:
                 self.print_colored_output("Player {0:1} has moved his piece.".format(player_number), Color.CYAN)

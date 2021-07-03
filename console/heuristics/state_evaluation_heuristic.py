@@ -23,7 +23,6 @@ def state_evaluation_heuristic(game_state: GameState, player_one_maximizer, is_e
             num = player_path_len
         result += round(100 / num, 2)
 
-        # sto je manja distanca drugog igraca, to gore
         num_1 = 50
         if player_two_distance != 0:
             num_1 = player_two_distance
@@ -57,8 +56,6 @@ def state_evaluation_heuristic(game_state: GameState, player_one_maximizer, is_e
             num = player_path_len
         result += round(100 / num, 2)
 
-        # sto je manja distanca prvog igraca, to gore
-        # TODO: istestiraj za blokiranje
         num_1 = 50
         if player_one_distance != 0:
             num_1 = player_one_distance

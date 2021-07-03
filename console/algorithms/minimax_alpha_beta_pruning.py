@@ -5,8 +5,6 @@ from console.heuristics.state_evaluation_heuristic import state_evaluation_heuri
 
 def minimax_alpha_beta_pruning(game_state: GameState, depth, alpha, beta, maximizing_player, player_one_minimax):
     if depth == 0:
-        # add real heuristic
-        # return game_state.player_one_walls_num + game_state.player_two_wall_num
         return state_evaluation_heuristic(game_state, player_one_minimax, False)
     if maximizing_player:
         max_eval = -math.inf

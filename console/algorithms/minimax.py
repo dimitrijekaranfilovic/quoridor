@@ -5,7 +5,6 @@ from console.heuristics.state_evaluation_heuristic import state_evaluation_heuri
 
 def minimax(game_state: GameState, depth, maximizing_player, player_one_minimax):
     if depth == 0:
-        # add real heuristic
         return state_evaluation_heuristic(game_state, player_one_minimax, False)
     if maximizing_player:
         max_eval = -math.inf
