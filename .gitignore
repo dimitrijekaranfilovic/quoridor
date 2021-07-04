@@ -128,4 +128,9 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+
+
 .idea
+poster-sr.pdf
+poster-sr.pptx
+
