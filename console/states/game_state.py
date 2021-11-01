@@ -591,7 +591,7 @@ class GameState:
         # TODO: vidi za vertikalne zidove
 
         start_row = max(self.player_one_pos[0] - 3, 0)
-        end_row = min(self.player_one_pos[0] + 2, 16)
+        end_row = min(self.player_one_pos[0] + 4, 16)
         start_col = max(self.player_one_pos[1] - 3, 0)
         end_col = min(self.player_one_pos[1] + 3, 16)
         # horizontal

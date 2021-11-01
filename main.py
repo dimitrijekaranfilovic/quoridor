@@ -1,6 +1,6 @@
-from console.game import Game
+from console.games.console_game import ConsoleGame
 
 if __name__ == '__main__':
-    g = Game()
+    g = ConsoleGame()
     g.play()
 
